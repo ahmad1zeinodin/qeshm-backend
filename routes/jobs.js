@@ -293,3 +293,89 @@ router.put('/:id/resolve-dispute', authenticateToken, requireRole('admin'), asyn
 });
 
 export default router;
+
+// PUT /:id/accept-dispatch — worker accepts the dispatched job (10 sec)
+router.put('/:id/accept-dispatch', authenticateToken, requireRole('worker'), async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ success: false, message: 'Job not found' });
+    if (String(job.currentCandidate) !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'This offer is not for you or has expired' });
+    }
+    if (job.offerExpiresAt && new Date() > new Date(job.offerExpiresAt)) {
+      return res.status(400).json({ success: false, message: 'Offer expired' });
+    }
+
+    job.status = 'accepted';
+    job.workerId = req.user.id;
+    job.offerExpiresAt = null;
+    await job.save();
+
+    await notify(job.clientId, 'job_accepted', `متخصص درخواست شما را پذیرفت: ${job.title}`, job._id);
+    res.json({ success: true, data: job, message: 'Job accepted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /:id/reject-dispatch — worker rejects, send to next
+router.put('/:id/reject-dispatch', authenticateToken, requireRole('worker'), async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ success: false, message: 'Job not found' });
+    if (String(job.currentCandidate) !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'This offer is not for you' });
+    }
+
+    // ارسال به نفر بعدی
+    const { dispatchJobToNextWorker } = await import('../services/jobDispatchService.js');
+    await dispatchJobToNextWorker(job._id);
+
+    res.json({ success: true, message: 'Rejected, dispatching to next worker' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /:id/accept-dispatch — worker accepts the dispatched job (10 sec)
+router.put('/:id/accept-dispatch', authenticateToken, requireRole('worker'), async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ success: false, message: 'Job not found' });
+    if (String(job.currentCandidate) !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'This offer is not for you or has expired' });
+    }
+    if (job.offerExpiresAt && new Date() > new Date(job.offerExpiresAt)) {
+      return res.status(400).json({ success: false, message: 'Offer expired' });
+    }
+
+    job.status = 'accepted';
+    job.workerId = req.user.id;
+    job.offerExpiresAt = null;
+    await job.save();
+
+    await notify(job.clientId, 'job_accepted', `متخصص درخواست شما را پذیرفت: ${job.title}`, job._id);
+    res.json({ success: true, data: job, message: 'Job accepted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /:id/reject-dispatch — worker rejects, send to next
+router.put('/:id/reject-dispatch', authenticateToken, requireRole('worker'), async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ success: false, message: 'Job not found' });
+    if (String(job.currentCandidate) !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'This offer is not for you' });
+    }
+
+    // ارسال به نفر بعدی
+    const { dispatchJobToNextWorker } = await import('../services/jobDispatchService.js');
+    await dispatchJobToNextWorker(job._id);
+
+    res.json({ success: true, message: 'Rejected, dispatching to next worker' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});

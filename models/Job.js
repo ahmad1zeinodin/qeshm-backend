@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 
 const jobSchema = new mongoose.Schema({
+  status: { type: String, default: 'pending' },
+  currentCandidate: { type: mongoose.Schema.Types.ObjectId, ref: 'WorkerProfile', default: null },
+  dispatchedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: 'WorkerProfile' }],
+  offerExpiresAt: { type: Date, default: null },
+
   clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   workerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   category: { type: String, required: true },

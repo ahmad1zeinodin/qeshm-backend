@@ -29,6 +29,13 @@ const workerProfileSchema = new mongoose.Schema({
     },
   ],
   skillScore: { type: Number, default: 50 },
+  starLevel: { type: Number, default: 1, min: 1, max: 3 }, // ۱ تا ۳ ستاره
+  debtAmount: { type: Number, default: 0 }, // مقدار بدهی
+  location: {
+    type: { type: String, default: 'Point' },
+    coordinates: { type: [Number], default: [0, 0] }, // [طول جغرافیایی, عرض جغرافیایی]
+  },
+
   scoreBand: {
     type: String,
     enum: ['elite', 'trusted', 'rising', 'probation', 'suspended'],
