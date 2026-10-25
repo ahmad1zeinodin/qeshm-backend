@@ -6,6 +6,7 @@ const categorySchema = new mongoose.Schema({
   icon: { type: String, default: '🔧' },
   coverImage: { type: String, default: '' },
   group: { type: String, default: 'home_construction', trim: true },
+  parentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null }, // برای ساختار پوشه‌ای
   isActive: { type: Boolean, default: true },
   consultationsEligible:  { type: Boolean, default: false },
   liveClassesEligible:    { type: Boolean, default: false },

@@ -1,46 +1,41 @@
 import express from 'express';
 import Category from '../models/Category.js';
-import WorkerProfile from '../models/WorkerProfile.js';
 
 const router = express.Router();
 
+// GET همه دسته‌بندی‌ها به صورت درختی (والد + فرزندان)
 router.get('/', async (req, res) => {
   try {
-    const categories = await Category.find({ isActive: true }).sort({ name: 1 }).lean();
-
-    const stats = await WorkerProfile.aggregate([
-      { $match: { isActive: true, isSuspended: { $ne: true } } },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'userId',
-          foreignField: '_id',
-          as: 'user',
-        },
-      },
-      { $unwind: '$user' },
-      {
-        $group: {
-          _id: '$category',
-          workers: { $sum: 1 },
-          verified: { $sum: { $cond: ['$user.idVerified', 1, 0] } },
-        },
-      },
-    ]);
-
-    const statsBySlug = Object.fromEntries(
-      stats.map((s) => [s._id, { workers: s.workers, verified: s.verified }])
-    );
-
-    const enriched = categories.map((c) => ({
-      ...c,
-      workerCount:   statsBySlug[c.slug]?.workers  || 0,
-      verifiedCount: statsBySlug[c.slug]?.verified || 0,
+    const categories = await Category.find({ isActive: true }).lean();
+    const roots = categories.filter(c => !c.parentId);
+    const tree = roots.map(root => ({
+      ...root,
+      children: categories.filter(c => c.parentId && c.parentId.toString() === root._id.toString())
     }));
-
-    res.json({ success: true, data: enriched, message: 'OK' });
+    res.json({ success: true, data: tree });
   } catch (err) {
-    res.status(500).json({ success: false, data: null, message: err.message });
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST ثبت دسته‌بندی جدید (با تعیین والد)
+router.post('/', async (req, res) => {
+  try {
+    const { name, slug, icon, group, parentId } = req.body;
+    const category = await Category.create({ name, slug, icon, group, parentId: parentId || null });
+    res.status(201).json({ success: true, data: category });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE حذف دسته‌بندی
+router.delete('/:id', async (req, res) => {
+  try {
+    await Category.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'دسته‌بندی حذف شد' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
