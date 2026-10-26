@@ -1567,7 +1567,8 @@ router.post('/vendors', authenticateToken, requireRole('admin'), async (req, res
     }
 
     // هش کردن رمز عبور
-    const bcrypt = await import('bcryptjs');
+    const bcryptModule = await import('bcryptjs');
+    const bcrypt = bcryptModule.default || bcryptModule;
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
