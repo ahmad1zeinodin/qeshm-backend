@@ -23,6 +23,45 @@ router.post('/', authenticateToken, async (req, res) => {
       finalAmount,
       address,
     });
+
+    // --- منطق مالی ---
+    const Category = (await import('../models/Category.js')).default;
+    const Wallet = (await import('../models/Wallet.js')).default;
+    const Transaction = (await import('../models/Transaction.js')).default;
+
+    const category = await Category.findOne({ slug: vendorType });
+    if (category) {
+      const vatPercent = category.vatEnabled ? category.vatPercent : 0;
+      const commissionPercent = category.commissionPercent || 0;
+      const commissionFixed = category.commissionFixed || 0;
+
+      const vatAmount = (finalAmount * vatPercent) / 100;
+      const amountWithoutVat = finalAmount - vatAmount;
+      const commissionAmount = (amountWithoutVat * commissionPercent) / 100 + commissionFixed;
+      const vendorShare = amountWithoutVat - commissionAmount;
+
+      // واریز سهم سفیر به کیف پول
+      if (vendorId) {
+        let wallet = await Wallet.findOne({ userId: vendorId });
+        
+        wallet.balance += vendorShare;
+        await wallet.save();
+
+        // ثبت تراکنش
+        const reference = 'DEP-' + Date.now() + '-' + vendorId;
+        await Transaction.create({
+          userId: vendorId,
+          orderId: order._id,
+          amount: vendorShare,
+          type: 'deposit',
+          reference,
+          description: 'سهم از سفارش ' + order._id,
+          status: 'success',
+        });
+      }
+    }
+    // --- پایان منطق مالی ---
+
     res.status(201).json({ success: true, data: order, message: 'سفارش با موفقیت ثبت شد.' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
