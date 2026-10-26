@@ -44,3 +44,38 @@ router.post('/process', authenticateToken, requireRole('admin'), async (req, res
 });
 
 export default router;
+
+// GET /api/finance/summary — گزارش لحظه‌ای بدهی/طلب و کمیسیون
+router.get('/summary', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { vendorName, vendorType, status } = req.query;
+    
+    // ساخت فیلتر بر اساس پارامترهای ورودی
+    let matchFilter = {};
+    if (vendorName) matchFilter.vendorId = { $regex: vendorName, $options: 'i' };
+    if (status) matchFilter.status = status;
+
+    // محاسبه جمع کل کمیسیون (درآمد پلتفرم)
+    const totalCommission = await Transaction.aggregate([
+      { $match: matchFilter },
+      { $group: { _id: null, total: { $sum: '$platformCommission' } } }
+    ]);
+
+    // محاسبه بدهی به هر فروشنده (جمع سهم فروشنده‌ها)
+    const vendorDebts = await Transaction.aggregate([
+      { $match: matchFilter },
+      { $group: { _id: '$vendorId', totalShare: { $sum: '$vendorShare' } } },
+      { $sort: { totalShare: -1 } }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalPlatformIncome: totalCommission[0]?.total || 0,
+        totalVendorDebts: vendorDebts,
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
