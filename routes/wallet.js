@@ -26,7 +26,7 @@ router.post('/withdraw', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'مبلغ درخواستی با توجه به کف حساب مجاز نیست.' });
     }
 
-    const reference = \`WTH-\${Date.now()}-\${req.user.id}\`;
+    const reference = "WTH-" + Date.now() + "-" + req.user.id;
     await Transaction.create({
       userId: req.user.id,
       amount,
