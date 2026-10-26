@@ -1550,3 +1550,48 @@ router.put('/workers/:id/unpin', authenticateToken, requireRole('admin'), async 
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+// POST /api/admin/vendors — ثبت‌نام سفیر جدید توسط ادمین
+router.post('/vendors', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { name, phone, nationalId, email, password, field, service } = req.body;
+    
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'نام، ایمیل و رمز عبور الزامی است.' });
+    }
+
+    // چک کردن ایمیل تکراری
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'این ایمیل قبلاً ثبت شده است.' });
+    }
+
+    // هش کردن رمز عبور
+    const bcrypt = await import('bcryptjs');
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // ساخت کاربر سفیر
+    const user = await User.create({
+      name,
+      email,
+      phone,
+      nationalId,
+      passwordHash,
+      role: 'worker',
+    });
+
+    // ساخت پروفایل سفیر (برای نگهداری فیلد و خدمت)
+    const WorkerProfile = (await import('../models/WorkerProfile.js')).default;
+    await WorkerProfile.create({
+      userId: user._id,
+      workerName: name,
+      category: service, // خدمتی که انتخاب کرده
+      // فیلد اصلی رو هم می‌تونیم بعدا اضافه کنیم
+    });
+
+    res.status(201).json({ success: true, data: user, message: 'سفیر با موفقیت ثبت‌نام شد.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
