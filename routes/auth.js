@@ -56,7 +56,11 @@ router.post(
       }
 
       const passwordHash = await bcrypt.hash(password, 10);
-      const user = await User.create({
+      if (nationalId) {
+      const existing = await User.findOne({ nationalId });
+      if (existing) return res.status(400).json({ success: false, message: "این کد ملی قبلاً ثبت شده است." });
+    }
+    const user = await User.create({
         name,
         email: normalEmail || undefined,
         phone: normalPhone || undefined,
