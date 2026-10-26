@@ -29,7 +29,6 @@ import subscriptionRoutes from './routes/subscriptions.js';
 import newsRoutes from './routes/news.js';
 import orderRoutes from './routes/orders.js';
 import financeRoutes from './routes/finance.js';
-import financeRoutes from './routes/finance.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -47,7 +46,6 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/finance', financeRoutes);
 app.use('/api/finance', financeRoutes);
 
 const PORT = process.env.PORT || 5000;
