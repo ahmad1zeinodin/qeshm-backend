@@ -1587,7 +1587,8 @@ router.post('/vendors', authenticateToken, requireRole('admin'), async (req, res
     await WorkerProfile.create({
       userId: user._id,
       workerName: name,
-      category: service, // خدمتی که انتخاب کرده
+      category: service,
+      onboardingComplete: true, // خدمتی که انتخاب کرده
       // فیلد اصلی رو هم می‌تونیم بعدا اضافه کنیم
     });
 
