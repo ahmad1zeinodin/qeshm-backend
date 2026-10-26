@@ -1496,3 +1496,57 @@ router.put('/businesses/:id/feature', async (req, res) => {
 });
 
 export default router;
+
+// POST /api/admin/workers — افزودن متخصص جدید توسط ادمین
+router.post('/workers', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { name, phone, category, serviceDistricts } = req.body;
+    
+    // ۱. ساخت کاربر (User)
+    const user = await User.create({
+      name,
+      phone,
+      role: 'worker',
+      password: '123456', // رمز عبور پیش‌فرض (بعداً می‌تواند تغییر کند)
+    });
+
+    // ۲. ساخت پروفایل متخصص (WorkerProfile)
+    const workerProfile = await WorkerProfile.create({
+      userId: user._id,
+      workerName: name,
+      category, // همان اسلاگ زیرمجموعه (مثلاً split-ac)
+      serviceDistricts: serviceDistricts || [],
+      acceptingWork: true,
+      isActive: true,
+    });
+
+    res.status(201).json({ success: true, data: { user, workerProfile }, message: 'متخصص با موفقیت اضافه شد' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/admin/workers/:id/pin — پین کردن متخصص برای ۲۴ ساعت
+router.put('/workers/:id/pin', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const worker = await WorkerProfile.findByIdAndUpdate(
+      req.params.id,
+      { pinnedUntil: new Date(Date.now() + 24 * 60 * 60 * 1000) }, // ۲۴ ساعت
+      { new: true }
+    );
+    if (!worker) return res.status(404).json({ success: false, message: 'متخصص یافت نشد' });
+    res.json({ success: true, data: worker, message: 'متخصص برای ۲۴ ساعت پین شد.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/admin/workers/:id/unpin — برداشتن پین
+router.put('/workers/:id/unpin', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    await WorkerProfile.findByIdAndUpdate(req.params.id, { pinnedUntil: null });
+    res.json({ success: true, message: 'پین برداشته شد.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});

@@ -129,6 +129,7 @@ const workerProfileSchema = new mongoose.Schema({
   // Note: live class balance is computed dynamically from completed LiveClass records
   // (GET /live-classes/me/balance) — no stored field needed.
   featuredUntil: { type: Date, default: null },
+  pinnedUntil: { type: Date, default: null }, // پین ۲۴ ساعته توسط مدیر
   slug: { type: String, lowercase: true },
 });
 
