@@ -6,9 +6,19 @@ import { requireRole } from '../middleware/requireRole.js';
 
 const router = express.Router();
 
+// روت موقت برای پاکسازی کامل شاخه‌ها و مهارت‌های قدیمی
+router.delete('/clear-all-data', async (req, res) => {
+  try {
+    await Skill.deleteMany({});
+    await Category.deleteMany({});
+    res.json({ success: true, message: 'تمامی شاخه‌ها و مهارت‌های قدیمی با موفقیت پاک شدند.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // ==================== API های شاخه‌ها (Category) ====================
 
-// GET /api/skills/categories — دریافت لیست شاخه‌ها
 router.get('/categories', async (req, res) => {
   try {
     const categories = await Category.find({ isActive: true }).sort({ name: 1 });
@@ -18,7 +28,6 @@ router.get('/categories', async (req, res) => {
   }
 });
 
-// POST /api/skills/categories — افزودن شاخه جدید
 router.post('/categories', authenticateToken, requireRole('admin'), async (req, res) => {
   try {
     const { name } = req.body;
@@ -30,7 +39,6 @@ router.post('/categories', authenticateToken, requireRole('admin'), async (req, 
   }
 });
 
-// DELETE /api/skills/categories/:id — حذف شاخه
 router.delete('/categories/:id', authenticateToken, requireRole('admin'), async (req, res) => {
   try {
     await Category.findByIdAndDelete(req.params.id);
@@ -42,7 +50,6 @@ router.delete('/categories/:id', authenticateToken, requireRole('admin'), async 
 
 // ==================== API های مهارت‌ها (Skill) ====================
 
-// GET /api/skills — دریافت لیست همه مهارت‌ها
 router.get('/', async (req, res) => {
   try {
     const skills = await Skill.find({ isActive: true }).populate('categoryId', 'name').sort({ name: 1 });
@@ -52,7 +59,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/skills — افزودن مهارت جدید
 router.post('/', authenticateToken, requireRole('admin'), async (req, res) => {
   try {
     const { name, categoryId, description } = req.body;
@@ -66,7 +72,6 @@ router.post('/', authenticateToken, requireRole('admin'), async (req, res) => {
   }
 });
 
-// DELETE /api/skills/:id — حذف مهارت
 router.delete('/:id', authenticateToken, requireRole('admin'), async (req, res) => {
   try {
     await Skill.findByIdAndDelete(req.params.id);
