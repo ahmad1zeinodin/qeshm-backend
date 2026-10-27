@@ -9,13 +9,19 @@ export async function dispatchJobToNextWorker(jobId) {
     const job = await Job.findById(jobId);
     if (!job || job.status !== 'pending') return;
 
-    // ۱. پیدا کردن سفیران واجد شرایط (آنلاین، تایید شده، بدون بدهی)
-    let candidates = await User.find({
+    let query = {
       role: 'worker',
       isOnline: true,
       isSuspended: false,
       _id: { $nin: job.dispatchedTo || [] },
-    }).sort({ acceptanceRate: -1, rating: -1 }); // اولویت: نرخ پذیرش و سپس امتیاز
+    };
+
+    // فیلتر بر اساس جنسیت درخواستی
+    if (job.preferredGender && job.preferredGender !== 'any') {
+      query.gender = job.preferredGender;
+    }
+
+    let candidates = await User.find(query).sort({ acceptanceRate: -1, rating: -1 });
 
     if (candidates.length === 0) {
       console.log('No eligible workers found for job ' + jobId);
@@ -27,25 +33,21 @@ export async function dispatchJobToNextWorker(jobId) {
     job.status = 'dispatching';
     job.currentCandidate = nextWorker._id;
     job.dispatchedTo = [...(job.dispatchedTo || []), nextWorker._id];
-    job.offerExpiresAt = new Date(Date.now() + 10000); // ۱۰ ثانیه
+    job.offerExpiresAt = new Date(Date.now() + 10000);
     await job.save();
 
-    // ۲. ارسال نوتیفیکیشن با مبلغ، آدرس و شرح کار
     await Notification.create({
       userId: nextWorker._id,
       type: 'new_job_offer',
-      message: `درخواست جدید: ${job.title} - مبلغ سهم شما: ${job.vendorShare?.toLocaleString() || job.agreedRate.toLocaleString()} تومان - آدرس: ${job.address}`,
+      message: `درخواست جدید: ${job.title} - مبلغ: ${job.agreedRate.toLocaleString()} تومان - آدرس: ${job.address}`,
       jobId: job._id,
     });
-
-    console.log('Job ' + jobId + ' dispatched to worker ' + nextWorker._id);
 
     if (activeTimers.has(jobId)) clearTimeout(activeTimers.get(jobId));
 
     const timer = setTimeout(async () => {
       const currentJob = await Job.findById(jobId);
       if (currentJob && currentJob.status === 'dispatching' && String(currentJob.currentCandidate) === String(nextWorker._id)) {
-        // اگر ۱۰ ثانیه گذشت و پاسخی نداد، به نفر بعدی برود
         await dispatchJobToNextWorker(jobId);
       }
       activeTimers.delete(jobId);
