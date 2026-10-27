@@ -308,8 +308,15 @@ router.put('/:id/accept-dispatch', authenticateToken, requireRole('worker'), asy
 
     job.status = 'accepted';
     job.workerId = req.user.id;
+    job.assignedWorkerId = req.user.id;
     job.offerExpiresAt = null;
     await job.save();
+
+    // به‌روزرسانی نرخ پذیرش سفیر
+    await User.findByIdAndUpdate(req.user.id, { $inc: { totalOffers: 1, acceptedOffers: 1 } });
+    const user = await User.findById(req.user.id);
+    user.acceptanceRate = (user.acceptedOffers / user.totalOffers) * 100;
+    await user.save();
 
     await notify(job.clientId, 'job_accepted', `متخصص درخواست شما را پذیرفت: ${job.title}`, job._id);
     res.json({ success: true, data: job, message: 'Job accepted' });
