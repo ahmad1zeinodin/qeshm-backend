@@ -84,6 +84,7 @@ router.get('/', authenticateToken, async (req, res) => {
     const jobs = await Job.find(filter)
       .populate('clientId', 'name profilePhoto location')
       .populate('workerId', 'name profilePhoto')
+      .populate('assignedWorkerId', 'name profilePhoto rating')
       .sort({ createdAt: -1 });
 
     res.json({ success: true, data: jobs, message: 'OK' });
