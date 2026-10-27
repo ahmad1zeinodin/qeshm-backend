@@ -1603,7 +1603,7 @@ router.put('/workers/:id/unpin', authenticateToken, requireRole('admin'), async 
 // POST /api/admin/vendors — ثبت‌نام سفیر جدید توسط ادمین
 router.post('/vendors', authenticateToken, requireRole('admin'), async (req, res) => {
   try {
-    const { name, phone, nationalId, email, password, field, service } = req.body;
+    const { name, phone, nationalId, email, password, field, service, skills } = req.body;
     
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: 'نام، ایمیل و رمز عبور الزامی است.' });
@@ -1629,6 +1629,7 @@ router.post('/vendors', authenticateToken, requireRole('admin'), async (req, res
       nationalId,
       passwordHash,
       role: 'worker',
+      skills: skills || [],
     });
 
     // ساخت پروفایل سفیر (برای نگهداری فیلد و خدمت)

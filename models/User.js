@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   nationalId: { type: String, unique: true, sparse: true, trim: true },
   passwordHash: { type: String, required: true },
+  skills: [{ type: mongoose.Schema.Types.ObjectId, ref: "Skill" }],
   role: { type: String, enum: ['client', 'worker', 'business', 'admin', 'reporter'], default: 'client' },
   adminRoleTitle: { type: String, default: '' }, // عنوان سمت (مثلاً مدیر مالی)
   adminPermissions: {

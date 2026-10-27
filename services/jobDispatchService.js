@@ -9,7 +9,7 @@ export async function dispatchJobToNextWorker(jobId) {
     const job = await Job.findById(jobId);
     if (!job || job.status !== 'pending') return;
 
-    let query = {
+    let baseQuery = {
       role: 'worker',
       isOnline: true,
       isSuspended: false,
@@ -18,10 +18,21 @@ export async function dispatchJobToNextWorker(jobId) {
 
     // فیلتر بر اساس جنسیت درخواستی
     if (job.preferredGender && job.preferredGender !== 'any') {
-      query.gender = job.preferredGender;
+      baseQuery.gender = job.preferredGender;
     }
 
-    let candidates = await User.find(query).sort({ acceptanceRate: -1, rating: -1 });
+    // ۱. اول سفیران هم‌شهر مشتری را جستجو کن
+    let candidates = [];
+    if (job.district) {
+      candidates = await User.find({ ...baseQuery, district: job.district })
+        .sort({ rating: -1, acceptanceRate: -1 });
+    }
+
+    // ۲. اگر سفیر هم‌شهری نبود، از شهرهای دیگر جستجو کن
+    if (candidates.length === 0) {
+      candidates = await User.find(baseQuery)
+        .sort({ rating: -1, acceptanceRate: -1 });
+    }
 
     if (candidates.length === 0) {
       console.log('No eligible workers found for job ' + jobId);

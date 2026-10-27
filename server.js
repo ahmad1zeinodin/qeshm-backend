@@ -13,28 +13,18 @@ app.use(cors({
 app.use(express.json());
 
 import authRoutes from './routes/auth.js';
-import userRoutes from './routes/users.js';
-import workerRoutes from './routes/workers.js';
-import businessRoutes from './routes/businesses.js';
 import contactRoutes from './routes/contact.js';
 import adminRoutes from './routes/admin.js';
 import walletRoutes from './routes/wallet.js';
 import reviewRoutes from './routes/reviews.js';
 import verifyRoutes from './routes/verify.js';
 import settingsRoutes from './routes/settings.js';
+import skillRoutes from './routes/skills.js';
+import newsRoutes from './routes/news.js';
 import ticketRoutes from './routes/tickets.js';
 import vendorRoutes from './routes/vendor.js';
-import liveClassRoutes from './routes/liveclasses.js';
-import shopRoutes from './routes/shop.js';
-import consultationRoutes from './routes/consultations.js';
 import categoryRoutes from './routes/categories.js';
 import jobRoutes from './routes/jobs.js';
-import groupRoutes from './routes/groups.js';
-import notificationRoutes from './routes/notifications.js';
-import subscriptionRoutes from './routes/subscriptions.js';
-import newsRoutes from './routes/news.js';
-import orderRoutes from './routes/orders.js';
-import financeRoutes from './routes/finance.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -46,6 +36,7 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/verify', verifyRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/skills', skillRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/live-classes', liveClassRoutes);
