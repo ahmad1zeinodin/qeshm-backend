@@ -1,8 +1,7 @@
-import WorkerProfile from '../models/WorkerProfile.js';
+import User from '../models/User.js';
 import Job from '../models/Job.js';
 import Notification from '../models/Notification.js';
 
-// نگهداری تایمرهای فعال (برای جلوگیری از ارسال همزمان)
 const activeTimers = new Map();
 
 export async function dispatchJobToNextWorker(jobId) {
@@ -10,69 +9,43 @@ export async function dispatchJobToNextWorker(jobId) {
     const job = await Job.findById(jobId);
     if (!job || job.status !== 'pending') return;
 
-    // پیدا کردن متخصصین واجد شرایط
-    // ۱. در منطقه مشتری باشند (اولویت اول)
-    // ۲. آنلاین و آماده به کار باشند (acceptingWork: true)
-    // ۳. تعلیق نشده باشند (isSuspended: false)
-    // ۴. بدهی نداشته باشند (debtAmount: 0)
-    // ۵. قبلاً درخواست برایشان ارسال نشده باشد
-    
-    const query = {
-      category: job.category,
-      acceptingWork: true,
+    // ۱. پیدا کردن سفیران واجد شرایط (آنلاین، تایید شده، بدون بدهی)
+    let candidates = await User.find({
+      role: 'worker',
+      isOnline: true,
       isSuspended: false,
-      debtAmount: { $lte: 0 },
       _id: { $nin: job.dispatchedTo || [] },
-    };
-
-    // اول متخصصین در همان منطقه را جستجو می‌کنیم
-    let candidates = await WorkerProfile.find({
-      ...query,
-      serviceDistricts: job.location?.district, // اگر منطقه مشتری مشخص باشد
-    }).sort({ starLevel: -1, skillScore: -1 });
-
-    // اگر در آن منطقه کسی نبود، کل جزیره را جستجو می‌کنیم
-    if (candidates.length === 0) {
-      candidates = await WorkerProfile.find(query).sort({ starLevel: -1, skillScore: -1 });
-    }
+    }).sort({ acceptanceRate: -1, rating: -1 }); // اولویت: نرخ پذیرش و سپس امتیاز
 
     if (candidates.length === 0) {
-      // کسی پیدا نشد، درخواست در حالت pending می‌ماند
-      console.log(`No eligible workers found for job ${jobId}`);
+      console.log('No eligible workers found for job ' + jobId);
       return;
     }
 
-    // انتخاب نفر اول (بالاترین ستاره در نزدیک‌ترین منطقه)
     const nextWorker = candidates[0];
-    
-    // به‌روزرسانی وضعیت سفارش
+
     job.status = 'dispatching';
     job.currentCandidate = nextWorker._id;
     job.dispatchedTo = [...(job.dispatchedTo || []), nextWorker._id];
-    job.offerExpiresAt = new Date(Date.now() + 10000); // ۱۰ ثانیه فرصت
+    job.offerExpiresAt = new Date(Date.now() + 10000); // ۱۰ ثانیه
     await job.save();
 
-    // ارسال نوتیفیکیشن به متخصص
+    // ۲. ارسال نوتیفیکیشن با مبلغ، آدرس و شرح کار
     await Notification.create({
-      userId: nextWorker.userId,
+      userId: nextWorker._id,
       type: 'new_job_offer',
-      message: `درخواست خدمت جدید: ${job.title} - ۱۰ ثانیه فرصت پاسخ`,
+      message: `درخواست جدید: ${job.title} - مبلغ سهم شما: ${job.vendorShare?.toLocaleString() || job.agreedRate.toLocaleString()} تومان - آدرس: ${job.address}`,
       jobId: job._id,
     });
 
-    console.log(`Job ${jobId} dispatched to worker ${nextWorker._id}`);
+    console.log('Job ' + jobId + ' dispatched to worker ' + nextWorker._id);
 
-    // تنظیم تایمر ۱۰ ثانیه‌ای
-    if (activeTimers.has(jobId)) {
-      clearTimeout(activeTimers.get(jobId));
-    }
+    if (activeTimers.has(jobId)) clearTimeout(activeTimers.get(jobId));
 
     const timer = setTimeout(async () => {
       const currentJob = await Job.findById(jobId);
-      // اگر هنوز در حالت dispatching است و همان متخصص هنوز پاسخ نداده
       if (currentJob && currentJob.status === 'dispatching' && String(currentJob.currentCandidate) === String(nextWorker._id)) {
-        console.log(`Timeout for job ${jobId}, dispatching to next worker`);
-        // به نفر بعدی ارسال کن
+        // اگر ۱۰ ثانیه گذشت و پاسخی نداد، به نفر بعدی برود
         await dispatchJobToNextWorker(jobId);
       }
       activeTimers.delete(jobId);

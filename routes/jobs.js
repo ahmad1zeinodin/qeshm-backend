@@ -308,6 +308,7 @@ router.put('/:id/accept-dispatch', authenticateToken, requireRole('worker'), asy
 
     job.status = 'accepted';
     job.workerId = req.user.id;
+    job.assignedWorkerId = req.user.id;
     job.offerExpiresAt = null;
     await job.save();
 
