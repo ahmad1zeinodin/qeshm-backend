@@ -68,6 +68,7 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
 router.post('/public', async (req, res) => {
   try {
     const { name, phone, email, text } = req.body;
+    if (!name || !text) {
       return res.status(400).json({ success: false, message: 'نام و متن پیام الزامی است.' });
     }
 
