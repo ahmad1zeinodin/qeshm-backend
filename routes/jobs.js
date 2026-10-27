@@ -292,6 +292,21 @@ router.put('/:id/resolve-dispute', authenticateToken, requireRole('admin'), asyn
   }
 });
 
+
+// GET /api/jobs/current-offer — دریافت درخواست در حال ارجاع برای سفیر
+router.get('/current-offer', authenticateToken, requireRole('worker'), async (req, res) => {
+  try {
+    const job = await Job.findOne({
+      currentCandidate: req.user.id,
+      status: 'dispatching',
+      offerExpiresAt: { $gt: new Date() }, // زمان انقضا نگذشته باشد
+    });
+    res.json({ success: true, data: job });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 export default router;
 
 // PUT /:id/accept-dispatch — worker accepts the dispatched job (10 sec)
