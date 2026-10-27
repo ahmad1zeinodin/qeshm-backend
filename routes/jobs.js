@@ -359,6 +359,7 @@ router.put('/:id/reject-dispatch', authenticateToken, requireRole('worker'), asy
   }
 });
 
+router.put('/test', authenticateToken, async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ success: false, message: 'Job not found' });
