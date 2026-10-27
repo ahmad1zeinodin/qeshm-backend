@@ -5,29 +5,49 @@ import { requireRole } from '../middleware/requireRole.js';
 
 const router = express.Router();
 
-// تنظیمات پیش‌فرض (بدون دیتابیس)
-const defaultSettings = {
-  aboutUs: 'پلتفرم جامع خدمات، گردشگری و نیازمندی‌های جزیره قشم.',
-  contactPhone: '076-3222XXXX',
-  contactEmail: 'info@qeshminoo.ir',
-  contactAddress: 'جزیره قشم، بلوار امام خمینی، ساختمان قشمی نو',
-  prayerTimes: {
-    fajr: '۰۵:۱۲',
-    sunrise: '۰۶:۳۰',
-    dhuhr: '۱۱:۵۸',
-    sunset: '۱۷:۲۵',
-    maghrib: '۱۷:۴۳',
-  },
-};
-
-// GET /api/settings — دریافت تنظیمات (بدون دیتابیس)
-router.get('/', async (req, res) => {
-  res.json({ success: true, data: defaultSettings });
+// روت موقت برای پاکسازی رکورد خراب (فقط یک بار اجرا شود)
+router.delete('/clear', async (req, res) => {
+  try {
+    await Settings.deleteMany({});
+    res.json({ success: true, message: 'رکوردهای تنظیمات پاک شدند.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-// PUT /api/settings — ذخیره تنظیمات (فعلاً غیرفعال)
+// GET /api/settings — دریافت تنظیمات (با دیتابیس)
+router.get('/', async (req, res) => {
+  try {
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = await Settings.create({});
+    }
+    res.json({ success: true, data: settings });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/settings — ویرایش تنظیمات (فقط ادمین)
 router.put('/', authenticateToken, requireRole('admin'), async (req, res) => {
-  res.json({ success: true, data: defaultSettings, message: 'تنظیمات ذخیره شد (فعلاً در حافظه).' });
+  try {
+    const { aboutUs, contactPhone, contactEmail, contactAddress, prayerTimes } = req.body;
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = await Settings.create({ aboutUs, contactPhone, contactEmail, contactAddress, prayerTimes });
+    } else {
+      settings.aboutUs = aboutUs || settings.aboutUs;
+      settings.contactPhone = contactPhone || settings.contactPhone;
+      settings.contactEmail = contactEmail || settings.contactEmail;
+      settings.contactAddress = contactAddress || settings.contactAddress;
+      settings.prayerTimes = prayerTimes || settings.prayerTimes;
+      settings.updatedAt = new Date();
+      await settings.save();
+    }
+    res.json({ success: true, data: settings, message: 'تنظیمات ذخیره شد.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 export default router;
