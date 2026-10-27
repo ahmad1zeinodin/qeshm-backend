@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
 // PUT /api/settings — ویرایش تنظیمات (فقط ادمین)
 router.put('/', authenticateToken, requireRole('admin'), async (req, res) => {
   try {
-    const { aboutUs, contactPhone, contactEmail, contactAddress } = req.body;
+    const { aboutUs, contactPhone, contactEmail, contactAddress, prayerTimes } = req.body;
     let settings = await Settings.findOne();
     if (!settings) {
       settings = await Settings.create({ aboutUs, contactPhone, contactEmail, contactAddress });
@@ -30,6 +30,7 @@ router.put('/', authenticateToken, requireRole('admin'), async (req, res) => {
       settings.contactPhone = contactPhone || settings.contactPhone;
       settings.contactEmail = contactEmail || settings.contactEmail;
       settings.contactAddress = contactAddress || settings.contactAddress;
+      settings.prayerTimes = prayerTimes || settings.prayerTimes;
       settings.updatedAt = new Date();
       await settings.save();
     }
