@@ -27,9 +27,6 @@ import categoryRoutes from './routes/categories.js';
 import jobRoutes from './routes/jobs.js';
 
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/workers', workerRoutes);
-app.use('/api/businesses', businessRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/wallet', walletRoutes);
@@ -39,17 +36,9 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/skills', skillRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/vendor', vendorRoutes);
-app.use('/api/live-classes', liveClassRoutes);
-app.use('/api/shop', shopRoutes);
-app.use('/api/consultations', consultationRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/jobs', jobRoutes);
-app.use('/api/groups', groupRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/news', newsRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/finance', financeRoutes);
 
 const PORT = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGO_URI)
