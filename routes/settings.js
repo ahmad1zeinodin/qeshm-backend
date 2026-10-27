@@ -40,4 +40,15 @@ router.put('/', authenticateToken, requireRole('admin'), async (req, res) => {
   }
 });
 
+
+// DELETE /api/settings/clear — پاکسازی رکورد خراب (موقت)
+router.delete('/clear', async (req, res) => {
+  try {
+    await Settings.deleteMany({});
+    res.json({ success: true, message: 'رکوردهای تنظیمات پاک شدند.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 export default router;
