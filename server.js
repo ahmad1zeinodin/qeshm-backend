@@ -5,11 +5,12 @@ import mongoose from 'mongoose';
 
 const app = express();
 app.use(cors({
-  origin: ['https://qeshminoo.ir', 'http://qeshminoo.ir', 'http://localhost:5173'],
+  origin: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
 }));
+app.options('*', cors());
 app.use(express.json());
 
 import authRoutes from './routes/auth.js';
