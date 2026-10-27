@@ -6,8 +6,8 @@ import { requireRole } from '../middleware/requireRole.js';
 
 const router = express.Router();
 
-// روت موقت برای پاکسازی کامل شاخه‌ها و مهارت‌های قدیمی
-router.delete('/clear-all-data', async (req, res) => {
+// روت پاکسازی موقت (بدون نیاز به توکن برای یکبار مصرف)
+router.get('/clear-all-data', async (req, res) => {
   try {
     await Skill.deleteMany({});
     await Category.deleteMany({});
