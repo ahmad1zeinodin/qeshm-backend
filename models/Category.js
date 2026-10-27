@@ -1,20 +1,8 @@
 import mongoose from 'mongoose';
 
 const categorySchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
-  slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  icon: { type: String, default: '🔧' },
-  coverImage: { type: String, default: '' },
-  group: { type: String, default: 'home_construction', trim: true },
-  minWithdrawalLimit: { type: Number, default: 0 },
-  commissionPercent: { type: Number, default: 0 },
-  commissionFixed: { type: Number, default: 0 },
-  parentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null }, // برای ساختار پوشه‌ای
+  name: { type: String, required: true, unique: true }, // نام شاخه (مثلاً امور منزل)
   isActive: { type: Boolean, default: true },
-  consultationsEligible:  { type: Boolean, default: false },
-  liveClassesEligible:    { type: Boolean, default: false },
-  shopEligible:           { type: Boolean, default: false },
-  defaultCommissionPercent: { type: Number, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 
