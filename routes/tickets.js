@@ -63,4 +63,30 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
   }
 });
 
+
+// POST /api/tickets/public — ارسال پیام پشتیبانی بدون نیاز به لاگین
+router.post('/public', async (req, res) => {
+  try {
+    const { name, phone, email, text } = req.body;
+      return res.status(400).json({ success: false, message: 'نام و متن پیام الزامی است.' });
+    }
+
+    const ticket = await Ticket.create({
+      userId: null, // کاربر مهمان
+      userName: name,
+      userPhone: phone,
+      userEmail: email,
+      messages: [{
+        senderId: null,
+        senderName: name,
+        senderRole: 'client',
+        text,
+      }],
+    });
+    res.status(201).json({ success: true, data: ticket, message: 'پیام شما ثبت شد و به زودی پاسخ داده می‌شود.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 export default router;
