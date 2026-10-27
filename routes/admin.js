@@ -1495,6 +1495,54 @@ router.put('/businesses/:id/feature', async (req, res) => {
   }
 });
 
+
+
+// POST /api/admin/sub-admins — ساخت ادمین جدید (زیرمجموعه) توسط ادمین اصلی
+router.post('/sub-admins', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { name, email, password, adminRoleTitle, adminPermissions, accessStart, accessEnd } = req.body;
+    
+      return res.status(400).json({ success: false, message: 'نام، ایمیل و رمز عبور الزامی است.' });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'این ایمیل قبلاً ثبت شده است.' });
+    }
+
+    const bcryptModule = await import('bcryptjs');
+    const bcrypt = bcryptModule.default || bcryptModule;
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    const user = await User.create({
+      name,
+      email,
+      passwordHash,
+      role: 'admin',
+      adminRoleTitle,
+      adminPermissions: adminPermissions || {},
+      accessStart: accessStart || new Date(),
+      accessEnd: accessEnd || null,
+    });
+
+    res.status(201).json({ success: true, data: user, message: 'ادمین جدید با موفقیت ساخته شد.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/admin/sub-admins — لیست ادمین‌های زیرمجموعه
+router.get('/sub-admins', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const admins = await User.find({ role: 'admin' }).select('-passwordHash').sort({ createdAt: -1 });
+    res.json({ success: true, data: admins });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
 export default router;
 
 // POST /api/admin/workers — افزودن متخصص جدید توسط ادمین
