@@ -7,6 +7,19 @@ const userSchema = new mongoose.Schema({
   nationalId: { type: String, unique: true, sparse: true, trim: true },
   passwordHash: { type: String, required: true },
   role: { type: String, enum: ['client', 'worker', 'business', 'admin', 'reporter'], default: 'client' },
+  adminRoleTitle: { type: String, default: '' }, // عنوان سمت (مثلاً مدیر مالی)
+  adminPermissions: {
+    dashboard: { type: Boolean, default: false },
+    users: { type: Boolean, default: false },
+    categories: { type: Boolean, default: false },
+    vendors: { type: Boolean, default: false },
+    addVendor: { type: Boolean, default: false },
+    orders: { type: Boolean, default: false },
+    settings: { type: Boolean, default: false },
+    tickets: { type: Boolean, default: false },
+  },
+  accessStart: { type: Date, default: Date.now },
+  accessEnd: { type: Date },
   gender: { type: String, enum: ['male', 'female'], default: 'male' }, // فیلد جنسیت
   isOnline: { type: Boolean, default: false },
   isSuspended: { type: Boolean, default: false },
