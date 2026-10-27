@@ -24,7 +24,13 @@ async function notify(userId, type, message, jobId) {
 }
 
 // POST / — client creates job
-router.post('/', authenticateToken, requireRole('client'), upload.array('photos', 5), async (req, res) => {
+router.post('/', authenticateToken, requireRole('client'), (req, res, next) => {
+  if (req.is('multipart/form-data')) {
+    upload.array('photos', 5)(req, res, next);
+  } else {
+    next();
+  }
+}, async (req, res) => {
   try {
     const { category, title, description, district, address, scheduledDate, agreedRate, workerId } = req.body;
     const photos = req.files ? req.files.map((f) => fileUrl(f)) : [];
