@@ -1502,6 +1502,7 @@ router.post('/sub-admins', authenticateToken, requireRole('admin'), async (req, 
   try {
     const { name, email, password, adminRoleTitle, adminPermissions, accessStart, accessEnd } = req.body;
     
+    if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: 'نام، ایمیل و رمز عبور الزامی است.' });
     }
 
