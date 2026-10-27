@@ -33,7 +33,7 @@ router.post(
       return res.status(400).json({ success: false, data: null, message: errors.array()[0].msg });
     }
 
-    const { name, email, password, role, phone, category, experienceYears, dayRateMin, dayRateMax, languages, businessName, businessType } = req.body;
+    const { name, email, password, role, phone, category, experienceYears, dayRateMin, dayRateMax, languages, businessName, businessType, nationalId } = req.body;
 
     const normalEmail = email ? email.toLowerCase().trim() : null;
     const normalPhone = phone ? (normalizePhone(phone) || phone.replace(/\D/g, '')) : null;
