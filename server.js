@@ -43,7 +43,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/news', newsRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('MongoDB connected');
