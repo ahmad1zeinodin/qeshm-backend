@@ -22,7 +22,7 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is ready.' });
 });
 
-const MONGODB_URI = 'mongodb+srv://ahmad1zeinodin_db_user:rmnAeWwG9mgYnxwR@qeshm-db.fuccltc.mongodb.net/qeshm?retryWrites=true&w=majority';
+const MONGODB_URI = 'mongodb://root:sfx3eq0sFAojrbgo@services.irn12.chabokan.net:16658/qeshm?authSource=admin';
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ DB Error:', err));
