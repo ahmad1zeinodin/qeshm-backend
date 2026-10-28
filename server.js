@@ -14,6 +14,7 @@ app.options('*', cors());
 app.use(express.json());
 
 import authRoutes from './routes/auth.js';
+import workerRoutes from './routes/workers.js';
 import contactRoutes from './routes/contact.js';
 import adminRoutes from './routes/admin.js';
 import walletRoutes from './routes/wallet.js';
@@ -28,6 +29,7 @@ import categoryRoutes from './routes/categories.js';
 import jobRoutes from './routes/jobs.js';
 
 app.use('/api/auth', authRoutes);
+app.use('/api/workers', workerRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/wallet', walletRoutes);
