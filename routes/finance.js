@@ -10,7 +10,7 @@ const requireAdmin = (req, res, next) => { if (req.user.role !== 'admin') return
 // ادمین: مشاهده همه تراکنش‌ها
 router.get('/transactions', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const transactions = await Transaction.find().populate('userId', 'name').sort({ createdAt: -1 });
+    const transactions = await Transaction.find().populate('userId', 'name').populate('orderId', 'serviceTitle').sort({ createdAt: -1 });
     res.json({ success: true, data: transactions });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
@@ -41,6 +41,7 @@ router.put('/withdrawals/:id/status', authenticateToken, requireAdmin, async (re
         wallet.balance -= request.amount;
         wallet.transactions.push({ type: 'withdraw', amount: request.amount, description: 'برداشت تایید شده' });
         await wallet.save();
+        await Transaction.create({ userId: request.workerId, type: 'payout', amount: request.amount, description: 'برداشت از کیف پول' });
       }
     }
     res.json({ success: true, message: 'وضعیت درخواست تغییر کرد.' });
