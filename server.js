@@ -9,6 +9,7 @@ import skillRoutes from './routes/skills.js';
 import workerRoutes from './routes/workers.js';
 import settingsRoutes from './routes/settings.js';
 import adminRoutes from './routes/admin.js';
+import orderRoutes from './routes/orders.js';
 
 dotenv.config();
 const app = express();
@@ -21,6 +22,7 @@ app.use('/api/skills', skillRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/orders', orderRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is ready.' });
