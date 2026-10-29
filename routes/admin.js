@@ -2,8 +2,6 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 import Order from '../models/Order.js';
-import Ticket from '../models/Ticket.js';
-import Settings from '../models/Settings.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -15,14 +13,7 @@ router.get('/stats', authenticateToken, requireAdmin, async (req, res) => {
     const totalUsers = await User.countDocuments({ role: 'client' });
     const totalWorkers = await User.countDocuments({ role: 'worker' });
     const totalOrders = await Order.countDocuments();
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const stats = await Order.aggregate([
-      { $match: { createdAt: { $gte: sevenDaysAgo } } },
-      { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, count: { $sum: 1 }, income: { $sum: "$depositAmount" } } },
-      { $sort: { _id: 1 } }
-    ]);
-    res.json({ success: true, data: { totalUsers, totalWorkers, totalOrders, chartData: stats } });
+    res.json({ success: true, data: { totalUsers, totalWorkers, totalOrders, chartData: [] } });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
@@ -57,35 +48,6 @@ router.get('/orders', authenticateToken, requireAdmin, async (req, res) => {
 
 router.put('/orders/:id/status', authenticateToken, requireAdmin, async (req, res) => {
   try { await Order.findByIdAndUpdate(req.params.id, { status: req.body.status, updatedAt: Date.now() }); res.json({ success: true }); } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
-
-// تیکت‌ها (دریافت و پاسخ)
-router.get('/tickets', authenticateToken, requireAdmin, async (req, res) => {
-  try { const tickets = await Ticket.find().populate('userId', 'name phone').sort({ createdAt: -1 }); res.json({ success: true, data: tickets }); } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
-
-router.put('/tickets/:id/reply', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const ticket = await Ticket.findById(req.params.id);
-    ticket.messages.push({ senderId: req.user.id, text: req.body.text });
-    ticket.status = 'answered';
-    await ticket.save();
-    res.json({ success: true, data: ticket, message: 'پاسخ ارسال شد.' });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
-
-// تنظیمات
-router.get('/settings', authenticateToken, requireAdmin, async (req, res) => {
-  try { const settings = await Settings.find(); const data = {}; settings.forEach(s => { data[s.key] = s.value; }); res.json({ success: true, data }); } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
-
-router.put('/settings', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    for (const [key, value] of Object.entries(req.body)) {
-      await Settings.findOneAndUpdate({ key }, { value, updatedAt: Date.now() }, { upsert: true });
-    }
-    res.json({ success: true, message: 'تنظیمات ذخیره شد.' });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 export default router;
