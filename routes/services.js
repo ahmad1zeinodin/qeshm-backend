@@ -4,6 +4,16 @@ import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// دریافت لیست خدمات خود سفیر (با توکن)
+router.get('/worker/me', authenticateToken, async (req, res) => {
+  try {
+    const services = await Service.find({ workerId: req.user.id, isActive: true });
+    res.json({ success: true, data: services });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // دریافت لیست خدمات یک سفیر (برای نمایش به مشتری)
 router.get('/worker/:workerId', async (req, res) => {
   try {
