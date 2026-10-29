@@ -32,4 +32,14 @@ router.get('/category/:categoryId', async (req, res) => {
   }
 });
 
+// دریافت اطلاعات یک سفیر
+router.get('/:id', async (req, res) => {
+  try {
+    const worker = await User.findById(req.params.id).select('-passwordHash -adminPermissions');
+    res.json({ success: true, data: worker });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 export default router;
