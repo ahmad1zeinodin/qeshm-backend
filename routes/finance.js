@@ -35,7 +35,6 @@ router.put('/withdrawals/:id/status', authenticateToken, requireAdmin, async (re
     request.updatedAt = Date.now();
     await request.save();
 
-    // اگر تایید شد، از موجودی کیف پول سفیر کم میشه
     if (status === 'approved') {
       const wallet = await Wallet.findOne({ userId: request.workerId });
       if (wallet && wallet.balance >= request.amount) {
