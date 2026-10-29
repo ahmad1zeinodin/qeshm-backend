@@ -21,6 +21,11 @@ const userSchema = new mongoose.Schema({
   accessStart: { type: Date, default: Date.now },
   accessEnd: { type: Date },
   skills: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Skill' }],
+  
+  // فیلدهای مربوط به سفیر
+  mainField: { type: String, default: '' }, // فیلد اصلی سفیر (مثلاً رستوران یا خدمات)
+  categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null }, // دسته‌بندی اصلی سفیر
+  
   acceptanceRate: { type: Number, default: 100 },
   rating: { type: Number, default: 5 },
   isOnline: { type: Boolean, default: false },
