@@ -19,7 +19,7 @@ router.post('/register', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, salt);
 
     const user = await User.create({ name, email, phone, passwordHash, role: 'client' });
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'qeshm-secret-key', { expiresIn: '7d' });
+    const token = jwt.sign({ id: user._id, role: user.role }, "qeshm-secret-key", { expiresIn: '7d' });
 
     res.status(201).json({ success: true, data: { user, token }, message: 'ثبت‌نام با موفقیت انجام شد.' });
   } catch (err) {
@@ -39,7 +39,7 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) return res.status(401).json({ success: false, message: 'ایمیل یا رمز عبور اشتباه است.' });
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'qeshm-secret-key', { expiresIn: '7d' });
+    const token = jwt.sign({ id: user._id, role: user.role }, "qeshm-secret-key", { expiresIn: '7d' });
     res.json({ success: true, data: { user, token }, message: 'ورود با موفقیت انجام شد.' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

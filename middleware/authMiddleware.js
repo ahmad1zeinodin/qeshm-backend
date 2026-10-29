@@ -5,7 +5,7 @@ export function authenticateToken(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json({ success: false, message: 'No token provided' });
 
-  jwt.verify(token, process.env.JWT_SECRET || 'qeshm-secret-key', (err, user) => {
+  jwt.verify(token, "qeshm-secret-key", (err, user) => {
     if (err) return res.status(403).json({ success: false, message: 'Invalid token' });
     req.user = user;
     next();
