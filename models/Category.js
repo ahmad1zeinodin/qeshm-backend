@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
 
 const categorySchema = new mongoose.Schema({
-  name: { type: String, required: true }, // نام دسته (مثلاً امور منزل)
+  name: { type: String, required: true }, // نام شاخه (مثلاً امور منزل)
+  mainField: { type: String, required: true }, // فیلد اصلی (مثلاً خدمات، رستوران)
   icon: { type: String, default: '' },
-  depositAmount: { type: Number, default: 0 }, // مبلغ بیعانه (تعیین شده توسط ادمین)
-  taxPercent: { type: Number, default: 0 }, // درصد مالیات بر ارزش افزوده
-  showTax: { type: Boolean, default: false }, // آیا مالیات نمایش داده شود؟
+  depositAmount: { type: Number, default: 0 }, // مبلغ بیعانه
+  taxPercent: { type: Number, default: 0 }, // درصد مالیات
+  showTax: { type: Boolean, default: false }, // نمایش مالیات
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
 });
