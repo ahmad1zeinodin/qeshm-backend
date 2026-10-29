@@ -29,6 +29,14 @@ const userSchema = new mongoose.Schema({
   profilePhoto: { type: String, default: '' },
   district: { type: String, default: 'قشم' },
   balance: { type: Number, default: 0 },
+  age: { type: Number, default: 0 },
+  gender: { type: String, enum: ['male', 'female'], default: 'male' },
+  sheba: { type: String, default: '' },
+  nationalCardPhoto: { type: String, default: '' },
+  selfiePhoto: { type: String, default: '' },
+  isVerified: { type: Boolean, default: false },
+  emergencyPhone: { type: String, default: '' },
+  adminBadgeText: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
 });
 
