@@ -22,7 +22,7 @@ router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
-// دریافت لیست همه سفیران (برای تایید یا رد کردن)
+// دریافت لیست همه سفیران
 router.get('/workers', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const workers = await User.find({ role: 'worker' }).select('-passwordHash').sort({ createdAt: -1 });
@@ -32,7 +32,7 @@ router.get('/workers', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
-// تغییر وضعیت سفیر (تایید یا تعلیق)
+// تغییر وضعیت سفیر (تعلیق یا فعال‌سازی)
 router.put('/workers/:id/status', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { isSuspended } = req.body;
