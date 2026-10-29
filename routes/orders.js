@@ -1,54 +1,62 @@
 import express from 'express';
 import Order from '../models/Order.js';
+import Service from '../models/Service.js';
+import Category from '../models/Category.js';
 import Transaction from '../models/Transaction.js';
-import Wallet from '../models/Wallet.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// ثبت سفارش جدید
+// ثبت سفارش جدید (با محاسبه خودکار بیعانه و مالیات)
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { workerId, serviceTitle, description, address, depositAmount, totalAmount } = req.body;
-    if (!serviceTitle || !address) {
-      return res.status(400).json({ success: false, message: 'اطلاعات ناقص است.' });
-    }
+    const { serviceId, address, description } = req.body;
+    if (!serviceId || !address) return res.status(400).json({ success: false, message: 'اطلاعات ناقص است.' });
+
+    const service = await Service.findById(serviceId).populate('categoryId');
+    if (!service) return res.status(404).json({ success: false, message: 'خدمت یافت نشد.' });
+
+    const category = service.categoryId;
+    const depositAmount = category.depositAmount || 0;
+    const taxAmount = category.showTax ? (service.price * category.taxPercent) / 100 : 0;
+    const totalPaid = depositAmount + taxAmount;
+    const remainingAmount = service.price - depositAmount;
 
     const order = await Order.create({
       clientId: req.user.id,
-      workerId,
-      serviceTitle,
-      description,
+      workerId: service.workerId,
+      serviceId: service._id,
+      categoryId: category._id,
+      serviceTitle: service.title,
+      description: description || service.description,
       address,
-      depositAmount: depositAmount || 0,
-      totalAmount: totalAmount || 0,
+      basePrice: service.price,
+      depositAmount,
+      taxAmount,
+      totalPaid,
+      remainingAmount,
       status: 'pending'
     });
 
-    // اگر بیعانه وجود دارد، به حساب پلتفرم واریز می‌شود (کمیسیون)
+    // ثبت تراکنش بیعانه (برای پلتفرم)
     if (depositAmount > 0) {
       await Transaction.create({
         userId: req.user.id,
         orderId: order._id,
         type: 'deposit',
         amount: depositAmount,
-        description: 'بیعانه سفارش خدمات'
+        description: 'بیعانه سفارش'
       });
     }
 
-    // اگر مبلغ کل وجود دارد (فروشگاه)، به کیف پول سفیر واریز می‌شود
-    if (totalAmount > 0 && workerId) {
-      const wallet = await Wallet.findOne({ userId: workerId }) || await Wallet.create({ userId: workerId });
-      wallet.balance += totalAmount;
-      wallet.transactions.push({ type: 'earning', amount: totalAmount, description: 'درآمد سفارش' });
-      await wallet.save();
-
+    // ثبت تراکنش مالیات (برای پلتفرم)
+    if (taxAmount > 0) {
       await Transaction.create({
-        userId: workerId,
+        userId: req.user.id,
         orderId: order._id,
-        type: 'earning',
-        amount: totalAmount,
-        description: 'واریز به کیف پول سفیر'
+        type: 'commission',
+        amount: taxAmount,
+        description: 'مالیات بر ارزش افزوده'
       });
     }
 
@@ -56,7 +64,7 @@ router.post('/', authenticateToken, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// سایر روت‌ها...
+// دریافت سفارشات
 router.get('/', authenticateToken, async (req, res) => {
   try {
     let query = {};
@@ -64,6 +72,14 @@ router.get('/', authenticateToken, async (req, res) => {
     if (req.user.role === 'worker') query = { workerId: req.user.id };
     const orders = await Order.find(query).populate('clientId', 'name phone').populate('workerId', 'name phone').sort({ createdAt: -1 });
     res.json({ success: true, data: orders });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+// تغییر وضعیت سفارش
+router.put('/:id/status', authenticateToken, async (req, res) => {
+  try {
+    const order = await Order.findByIdAndUpdate(req.params.id, { status: req.body.status, updatedAt: Date.now() }, { new: true });
+    res.json({ success: true, data: order });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 

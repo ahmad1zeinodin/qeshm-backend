@@ -1,64 +1,79 @@
 import express from 'express';
+import Order from '../models/Order.js';
 import Transaction from '../models/Transaction.js';
-import WithdrawalRequest from '../models/WithdrawalRequest.js';
 import Wallet from '../models/Wallet.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
-const requireAdmin = (req, res, next) => { if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'دسترسی غیرمجاز.' }); next(); };
 
-router.get('/summary', authenticateToken, requireAdmin, async (req, res) => {
+// ثبت سفارش جدید
+router.post('/', authenticateToken, async (req, res) => {
   try {
-    const transactions = await Transaction.find();
-    const totalDeposits = transactions.filter(t => t.type === 'deposit').reduce((sum, t) => sum + t.amount, 0);
-    const totalPayouts = transactions.filter(t => t.type === 'payout').reduce((sum, t) => sum + t.amount, 0);
-    const totalBalance = totalDeposits - totalPayouts;
-    res.json({ success: true, data: { totalDeposits, totalPayouts, totalBalance } });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
-
-router.get('/transactions', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const transactions = await Transaction.find().populate('userId', 'name').populate('orderId', 'serviceTitle').sort({ createdAt: -1 });
-    res.json({ success: true, data: transactions });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
-
-router.get('/withdrawals', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const requests = await WithdrawalRequest.find().populate('workerId', 'name phone').sort({ createdAt: -1 });
-    res.json({ success: true, data: requests });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
-
-router.put('/withdrawals/:id/status', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const { status, adminNote } = req.body;
-    const request = await WithdrawalRequest.findById(req.params.id);
-    if (!request) return res.status(404).json({ success: false, message: 'درخواست یافت نشد.' });
-    request.status = status;
-    request.adminNote = adminNote || '';
-    request.updatedAt = Date.now();
-    await request.save();
-    if (status === 'approved') {
-      const wallet = await Wallet.findOne({ userId: request.workerId });
-      if (wallet && wallet.availableBalance >= request.amount) {
-        wallet.availableBalance -= request.amount;
-        wallet.transactions.push({ type: 'withdraw', amount: request.amount, description: 'برداشت تایید شده' });
-        await wallet.save();
-        await Transaction.create({ userId: request.workerId, type: 'payout', amount: request.amount, description: 'برداشت از کیف پول' });
-      }
+    const { workerId, serviceTitle, description, address, depositAmount, totalAmount } = req.body;
+    if (!serviceTitle || !address) {
+      return res.status(400).json({ success: false, message: 'اطلاعات ناقص است.' });
     }
-    res.json({ success: true, message: 'وضعیت درخواست تغییر کرد.' });
+
+    const order = await Order.create({
+      clientId: req.user.id,
+      workerId,
+      serviceTitle,
+      description,
+      address,
+      depositAmount: depositAmount || 0,
+      totalAmount: totalAmount || 0,
+      status: 'pending'
+    });
+
+    // برای بخش خدمات: بیعانه به حساب پلتفرم می‌رود (کمیسیون)
+    if (depositAmount > 0) {
+      await Transaction.create({
+        userId: req.user.id,
+        orderId: order._id,
+        type: 'deposit',
+        amount: depositAmount,
+        description: 'بیعانه سفارش خدمات'
+      });
+    }
+
+    // برای بخش فروشگاه/رستوران: مبلغ کل به کیف پول سفیر واریز می‌شود
+    if (totalAmount > 0 && workerId) {
+      let wallet = await Wallet.findOne({ userId: workerId });
+      if (!wallet) wallet = await Wallet.create({ userId: workerId });
+      
+      wallet.availableBalance += totalAmount;
+      wallet.transactions.push({ type: 'earning', amount: totalAmount, description: 'درآمد سفارش' });
+      await wallet.save();
+
+      await Transaction.create({
+        userId: workerId,
+        orderId: order._id,
+        type: 'earning',
+        amount: totalAmount,
+        description: 'واریز به کیف پول سفیر'
+      });
+    }
+
+    res.status(201).json({ success: true, data: order, message: 'سفارش ثبت شد.' });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-router.post('/withdrawals', authenticateToken, async (req, res) => {
+// دریافت سفارشات
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    if (req.user.role !== 'worker') return res.status(403).json({ success: false, message: 'فقط سفیران.' });
-    const { amount, sheba } = req.body;
-    const request = await WithdrawalRequest.create({ workerId: req.user.id, amount, sheba });
-    res.status(201).json({ success: true, data: request, message: 'درخواست ثبت شد.' });
+    let query = {};
+    if (req.user.role === 'client') query = { clientId: req.user.id };
+    if (req.user.role === 'worker') query = { workerId: req.user.id };
+    const orders = await Order.find(query).populate('clientId', 'name phone').populate('workerId', 'name phone').sort({ createdAt: -1 });
+    res.json({ success: true, data: orders });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+// تغییر وضعیت سفارش
+router.put('/:id/status', authenticateToken, async (req, res) => {
+  try {
+    const order = await Order.findByIdAndUpdate(req.params.id, { status: req.body.status, updatedAt: Date.now() }, { new: true });
+    res.json({ success: true, data: order });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
