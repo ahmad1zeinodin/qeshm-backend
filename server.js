@@ -11,6 +11,7 @@ import settingsRoutes from './routes/settings.js';
 import adminRoutes from './routes/admin.js';
 import orderRoutes from './routes/orders.js';
 import serviceRoutes from './routes/services.js';
+import walletRoutes from './routes/wallet.js';
 
 dotenv.config();
 const app = express();
@@ -25,6 +26,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/wallet', walletRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is ready.' });
