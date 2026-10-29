@@ -7,7 +7,16 @@ import { authenticateToken } from '../middleware/authMiddleware.js';
 const router = express.Router();
 const requireAdmin = (req, res, next) => { if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'دسترسی غیرمجاز.' }); next(); };
 
-// ادمین: مشاهده همه تراکنش‌ها
+router.get('/summary', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const transactions = await Transaction.find();
+    const totalDeposits = transactions.filter(t => t.type === 'deposit').reduce((sum, t) => sum + t.amount, 0);
+    const totalPayouts = transactions.filter(t => t.type === 'payout').reduce((sum, t) => sum + t.amount, 0);
+    const totalBalance = totalDeposits - totalPayouts;
+    res.json({ success: true, data: { totalDeposits, totalPayouts, totalBalance } });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
 router.get('/transactions', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const transactions = await Transaction.find().populate('userId', 'name').populate('orderId', 'serviceTitle').sort({ createdAt: -1 });
@@ -15,7 +24,6 @@ router.get('/transactions', authenticateToken, requireAdmin, async (req, res) =>
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// ادمین: مشاهده درخواست‌های برداشت
 router.get('/withdrawals', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const requests = await WithdrawalRequest.find().populate('workerId', 'name phone').sort({ createdAt: -1 });
@@ -23,22 +31,19 @@ router.get('/withdrawals', authenticateToken, requireAdmin, async (req, res) => 
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// ادمین: تایید یا رد درخواست برداشت
 router.put('/withdrawals/:id/status', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { status, adminNote } = req.body;
     const request = await WithdrawalRequest.findById(req.params.id);
     if (!request) return res.status(404).json({ success: false, message: 'درخواست یافت نشد.' });
-    
     request.status = status;
     request.adminNote = adminNote || '';
     request.updatedAt = Date.now();
     await request.save();
-
     if (status === 'approved') {
       const wallet = await Wallet.findOne({ userId: request.workerId });
-      if (wallet && wallet.balance >= request.amount) {
-        wallet.balance -= request.amount;
+      if (wallet && wallet.availableBalance >= request.amount) {
+        wallet.availableBalance -= request.amount;
         wallet.transactions.push({ type: 'withdraw', amount: request.amount, description: 'برداشت تایید شده' });
         await wallet.save();
         await Transaction.create({ userId: request.workerId, type: 'payout', amount: request.amount, description: 'برداشت از کیف پول' });
@@ -48,7 +53,6 @@ router.put('/withdrawals/:id/status', authenticateToken, requireAdmin, async (re
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// سفیر: ثبت درخواست برداشت
 router.post('/withdrawals', authenticateToken, async (req, res) => {
   try {
     if (req.user.role !== 'worker') return res.status(403).json({ success: false, message: 'فقط سفیران.' });
