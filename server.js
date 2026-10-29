@@ -7,6 +7,8 @@ import authRoutes from './routes/auth.js';
 import categoryRoutes from './routes/categories.js';
 import skillRoutes from './routes/skills.js';
 import workerRoutes from './routes/workers.js';
+import settingsRoutes from './routes/settings.js';
+import adminRoutes from './routes/admin.js';
 
 dotenv.config();
 const app = express();
@@ -17,12 +19,16 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/skills', skillRoutes);
 app.use('/api/workers', workerRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is ready.' });
 });
 
+// آدرس دیتابیس چابکان مستقیماً اینجاست (بدون واسطه .env)
 const MONGODB_URI = 'mongodb://root:sfx3eq0sFAojrbgo@services.irn12.chabokan.net:16658/qeshm?authSource=admin';
+
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ DB Error:', err));
