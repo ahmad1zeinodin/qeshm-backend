@@ -2,6 +2,8 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import MainField from './models/MainField.js'; // ✅ اضافه شد
+import Category from './models/Category.js';   // ✅ اضافه شد
 
 import authRoutes from './routes/auth.js';
 import categoryRoutes from './routes/categories.js';
@@ -17,7 +19,7 @@ import orderRoutes from './routes/orders.js';
 import serviceRoutes from './routes/services.js';
 import walletRoutes from './routes/wallet.js';
 import employeeRoutes from './routes/employees.js';
-import newsRoutes from './routes/news.js'; // ✅ جدید
+import newsRoutes from './routes/news.js';
 
 dotenv.config();
 const app = express();
@@ -39,7 +41,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/employees', employeeRoutes);
-app.use('/api/news', newsRoutes); // ✅ جدید
+app.use('/api/news', newsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is ready.' });
@@ -48,7 +50,13 @@ app.get('/api/health', (req, res) => {
 const MONGODB_URI = 'mongodb://root:sfx3eq0sFAojrbgo@services.irn12.chabokan.net:16658/qeshm?authSource=admin';
 
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('✅ MongoDB connected'))
+  .then(async () => {
+    console.log('✅ MongoDB connected');
+    // ✅ این بخش دیتابیس رو یک بار تمیز می‌کنه
+    await MainField.deleteMany({});
+    await Category.deleteMany({});
+    console.log('🧹 تمام فیلدها و زیرشاخه‌ها پاک شدند');
+  })
   .catch(err => console.error('❌ DB Error:', err));
 
 const PORT = process.env.PORT || 3000;
