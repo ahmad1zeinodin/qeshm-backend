@@ -4,6 +4,7 @@ import Service from '../models/Service.js';
 import Category from '../models/Category.js';
 import Transaction from '../models/Transaction.js';
 import Wallet from '../models/Wallet.js';
+import Notification from '../models/Notification.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -23,7 +24,6 @@ router.post('/', authenticateToken, async (req, res) => {
     const totalPaid = depositAmount + taxAmount;
     const remainingAmount = service.price - depositAmount;
 
-    // بررسی پرداخت از کیف پول
     if (paymentMethod === 'wallet') {
       let wallet = await Wallet.findOne({ userId: req.user.id });
       if (!wallet || wallet.balance < totalPaid) {
@@ -51,27 +51,21 @@ router.post('/', authenticateToken, async (req, res) => {
       status: 'pending'
     });
 
-    // ثبت تراکنش بیعانه (برای پلتفرم)
     if (depositAmount > 0) {
-      await Transaction.create({
-        userId: req.user.id,
-        orderId: order._id,
-        type: 'deposit',
-        amount: depositAmount,
-        description: 'بیعانه سفارش'
-      });
+      await Transaction.create({ userId: req.user.id, orderId: order._id, type: 'deposit', amount: depositAmount, description: 'بیعانه سفارش' });
     }
 
-    // ثبت تراکنش مالیات (برای پلتفرم)
     if (taxAmount > 0) {
-      await Transaction.create({
-        userId: req.user.id,
-        orderId: order._id,
-        type: 'commission',
-        amount: taxAmount,
-        description: 'مالیات بر ارزش افزوده'
-      });
+      await Transaction.create({ userId: req.user.id, orderId: order._id, type: 'commission', amount: taxAmount, description: 'مالیات بر ارزش افزوده' });
     }
+
+    // ارسال پیام به مشتری
+    await Notification.create({
+      userId: req.user.id,
+      title: 'سفارش ثبت شد',
+      message: `سفارش شما برای «${service.title}» با موفقیت ثبت شد و در حال بررسی است.`,
+      type: 'order'
+    });
 
     res.status(201).json({ success: true, data: order, message: 'سفارش ثبت شد.' });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
@@ -91,7 +85,31 @@ router.get('/', authenticateToken, async (req, res) => {
 // تغییر وضعیت سفارش
 router.put('/:id/status', authenticateToken, async (req, res) => {
   try {
-    const order = await Order.findByIdAndUpdate(req.params.id, { status: req.body.status, updatedAt: Date.now() }, { new: true });
+    const { status } = req.body;
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'سفارش یافت نشد.' });
+
+    // اگر سفیر کنسل کرد، بیعانه به کیف پول مشتری برمی‌گردد
+    if (status === 'cancelled' && order.paymentMethod) {
+      let wallet = await Wallet.findOne({ userId: order.clientId });
+      if (!wallet) wallet = await Wallet.create({ userId: order.clientId });
+      
+      wallet.balance += order.totalPaid;
+      wallet.transactions.push({ type: 'refund', amount: order.totalPaid, description: 'عودت وجه به دلیل کنسلی سفیر' });
+      await wallet.save();
+
+      // ارسال پیام به مشتری
+      await Notification.create({
+        userId: order.clientId,
+        title: 'عودت وجه',
+        message: `سفیر سفارش «${order.serviceTitle}» را کنسل کرد. مبلغ ${order.totalPaid.toLocaleString()} تومان به کیف پول شما بازگشت.`,
+        type: 'wallet'
+      });
+    }
+
+    order.status = status;
+    order.updatedAt = Date.now();
+    await order.save();
     res.json({ success: true, data: order });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
