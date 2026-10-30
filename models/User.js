@@ -7,36 +7,29 @@ const userSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   role: { type: String, enum: ['client', 'worker', 'admin', 'support', 'employee'], default: 'client' },
   
-  // اطلاعات پایه پروفایل
   profilePhoto: { type: String, default: '' },
   bio: { type: String, default: '' },
   nationalId: { type: String, default: '' },
   sheba: { type: String, default: '' },
   emergencyPhone: { type: String, default: '' },
   adminBadgeText: { type: String, default: '' },
-  maritalStatus: { type: String, enum: ['single', 'married', ''], default: '' }, // وضعیت تاهل
+  maritalStatus: { type: String, enum: ['single', 'married', ''], default: '' },
   
-  // مدارک و مستندات (آپلود شده)
   documents: {
-    nationalCardPhoto: { type: String, default: '' }, // عکس کارت ملی
-    birthCertificatePhoto: { type: String, default: '' }, // عکس شناسنامه
-    businessLicense: { type: String, default: '' }, // جواز کسب (برای اصناف)
-    skillCertificate: { type: String, default: '' }, // مدارک تخصصی (برای خدمات)
+    nationalCardPhoto: { type: String, default: '' },
+    birthCertificatePhoto: { type: String, default: '' },
+    businessLicense: { type: String, default: '' },
+    skillCertificate: { type: String, default: '' },
   },
 
-  // احراز هویت (سامانه هدا)
   isVerified: { type: Boolean, default: false },
   verificationStatus: { type: String, enum: ['pending', 'approved', 'rejected', 'none'], default: 'none' },
-  verificationTrackId: { type: String, default: '' }, // کد رهگیری هدا
+  verificationTrackId: { type: String, default: '' },
   
-  // فیلدها و دسته‌بندی
   mainField: { type: String, default: '' },
   categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
-  
-  // وضعیت آنلاین بودن
   isOnline: { type: Boolean, default: false },
   
-  // سیستم دسترسی‌ها (برای همکاران)
   adminPermissions: {
     dashboard: { type: Boolean, default: false },
     mainFields: { type: Boolean, default: false },
@@ -50,10 +43,13 @@ const userSchema = new mongoose.Schema({
     settings: { type: Boolean, default: false }
   },
   
-  // اطلاعات پرسنلی (برای همکاران)
   personnelNumber: { type: String, default: '' },
   jobTitle: { type: String, default: '' },
   
+  // ✅ فیلدهای جدید برای کد یکبار مصرف
+  otpCode: { type: String },
+  otpExpires: { type: Date },
+
   createdAt: { type: Date, default: Date.now },
 });
 
