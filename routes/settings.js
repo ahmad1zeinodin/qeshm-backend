@@ -3,35 +3,31 @@ import Settings from '../models/Settings.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+const requireAdmin = (req, res, next) => { if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'دسترسی غیرمجاز.' }); next(); };
 
-// دریافت همه تنظیمات
+// دریافت همه تنظیمات (برای فرانت‌اند)
 router.get('/', async (req, res) => {
   try {
     const settings = await Settings.find();
     const data = {};
     settings.forEach(s => { data[s.key] = s.value; });
     res.json({ success: true, data });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 // ذخیره یا به‌روزرسانی تنظیمات (فقط ادمین)
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'دسترسی غیرمجاز.' });
-    const { key, value } = req.body;
-    if (!key || value === undefined) return res.status(400).json({ success: false, message: 'کلید و مقدار الزامی است.' });
-
-    const setting = await Settings.findOneAndUpdate(
-      { key },
-      { value, updatedAt: Date.now() },
-      { new: true, upsert: true }
-    );
-    res.json({ success: true, data: setting, message: 'تنظیمات ذخیره شد.' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
+    const settingsData = req.body;
+    for (const [key, value] of Object.entries(settingsData)) {
+      await Settings.findOneAndUpdate(
+        { key },
+        { value, updatedAt: Date.now() },
+        { upsert: true, new: true }
+      );
+    }
+    res.json({ success: true, message: 'تنظیمات با موفقیت ذخیره شد.' });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 export default router;
