@@ -3,14 +3,15 @@ import Order from '../models/Order.js';
 import Service from '../models/Service.js';
 import Category from '../models/Category.js';
 import Transaction from '../models/Transaction.js';
+import Wallet from '../models/Wallet.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// ثبت سفارش جدید (با محاسبه خودکار بیعانه و مالیات)
+// ثبت سفارش جدید
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { serviceId, address, description } = req.body;
+    const { serviceId, address, description, paymentMethod } = req.body;
     if (!serviceId || !address) return res.status(400).json({ success: false, message: 'اطلاعات ناقص است.' });
 
     const service = await Service.findById(serviceId).populate('categoryId');
@@ -21,6 +22,17 @@ router.post('/', authenticateToken, async (req, res) => {
     const taxAmount = category.showTax ? (service.price * category.taxPercent) / 100 : 0;
     const totalPaid = depositAmount + taxAmount;
     const remainingAmount = service.price - depositAmount;
+
+    // بررسی پرداخت از کیف پول
+    if (paymentMethod === 'wallet') {
+      let wallet = await Wallet.findOne({ userId: req.user.id });
+      if (!wallet || wallet.balance < totalPaid) {
+        return res.status(400).json({ success: false, message: 'موجودی کیف پول کافی نیست.' });
+      }
+      wallet.balance -= totalPaid;
+      wallet.transactions.push({ type: 'payment', amount: totalPaid, description: 'پرداخت بیعانه سفارش' });
+      await wallet.save();
+    }
 
     const order = await Order.create({
       clientId: req.user.id,
@@ -35,6 +47,7 @@ router.post('/', authenticateToken, async (req, res) => {
       taxAmount,
       totalPaid,
       remainingAmount,
+      paymentMethod: paymentMethod || 'online',
       status: 'pending'
     });
 
