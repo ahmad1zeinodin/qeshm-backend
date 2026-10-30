@@ -2,46 +2,44 @@ import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  email: { type: String, required: true, unique: true },
   phone: { type: String, required: true },
-  nationalId: { type: String, unique: true, sparse: true, trim: true },
   passwordHash: { type: String, required: true },
-  role: { type: String, enum: ['client', 'worker', 'admin'], default: 'client' },
-  adminRoleTitle: { type: String, default: '' },
-  adminPermissions: {
-    dashboard: { type: Boolean, default: false },
-    users: { type: Boolean, default: false },
-    categories: { type: Boolean, default: false },
-    vendors: { type: Boolean, default: false },
-    addVendor: { type: Boolean, default: false },
-    orders: { type: Boolean, default: false },
-    settings: { type: Boolean, default: false },
-    tickets: { type: Boolean, default: false },
-  },
-  accessStart: { type: Date, default: Date.now },
-  accessEnd: { type: Date },
-  skills: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Skill' }],
+  role: { type: String, enum: ['client', 'worker', 'admin', 'support', 'employee'], default: 'client' },
   
-  // فیلدهای مربوط به سفیر
-  mainField: { type: String, default: '' }, // فیلد اصلی سفیر (مثلاً رستوران یا خدمات)
-  categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null }, // دسته‌بندی اصلی سفیر
-  
-  acceptanceRate: { type: Number, default: 100 },
-  rating: { type: Number, default: 5 },
-  isOnline: { type: Boolean, default: false },
-  isSuspended: { type: Boolean, default: false },
-  bio: { type: String, default: '' },
+  // اطلاعات پروفایل
   profilePhoto: { type: String, default: '' },
-  district: { type: String, default: 'قشم' },
-  balance: { type: Number, default: 0 },
-  age: { type: Number, default: 0 },
-  gender: { type: String, enum: ['male', 'female'], default: 'male' },
+  bio: { type: String, default: '' },
+  nationalId: { type: String, default: '' },
   sheba: { type: String, default: '' },
-  nationalCardPhoto: { type: String, default: '' },
-  selfiePhoto: { type: String, default: '' },
-  isVerified: { type: Boolean, default: false },
   emergencyPhone: { type: String, default: '' },
   adminBadgeText: { type: String, default: '' },
+  
+  // فیلدها و دسته‌بندی
+  mainField: { type: String, default: '' },
+  categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
+  
+  // وضعیت آنلاین بودن
+  isOnline: { type: Boolean, default: false },
+  
+  // سیستم دسترسی‌ها (برای همکاران)
+  adminPermissions: {
+    dashboard: { type: Boolean, default: false },
+    mainFields: { type: Boolean, default: false },
+    categories: { type: Boolean, default: false },
+    workers: { type: Boolean, default: false },
+    orders: { type: Boolean, default: false },
+    users: { type: Boolean, default: false },
+    finance: { type: Boolean, default: false },
+    support: { type: Boolean, default: false },
+    news: { type: Boolean, default: false },
+    settings: { type: Boolean, default: false }
+  },
+  
+  // اطلاعات پرسنلی (برای همکاران)
+  personnelNumber: { type: String, default: '' },
+  jobTitle: { type: String, default: '' },
+  
   createdAt: { type: Date, default: Date.now },
 });
 

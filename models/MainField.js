@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
 
 const mainFieldSchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true }, // نام فیلد اصلی (مثلاً خدمات، رستوران)
-  isActive: { type: Boolean, default: true },
+  name: { type: String, required: true, unique: true },
+  icon: { type: String, default: '' }, // آدرس عکس یا آیکون
+  isActive: { type: Boolean, default: true }, // نمایش یا عدم نمایش در سایت
   createdAt: { type: Date, default: Date.now },
 });
 

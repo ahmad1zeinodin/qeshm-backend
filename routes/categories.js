@@ -4,7 +4,10 @@ import MainField from '../models/MainField.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
-const requireAdmin = (req, res, next) => { if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'دسترسی غیرمجاز.' }); next(); };
+const requireAdmin = (req, res, next) => { 
+  if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'دسترسی غیرمجاز.' }); 
+  next(); 
+};
 
 // دریافت همه فیلدهای اصلی
 router.get('/main-fields', async (req, res) => {
@@ -17,10 +20,18 @@ router.get('/main-fields', async (req, res) => {
 // افزودن فیلد اصلی جدید
 router.post('/main-fields', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, icon } = req.body;
     if (!name) return res.status(400).json({ success: false, message: 'نام فیلد اصلی الزامی است.' });
-    const field = await MainField.create({ name });
+    const field = await MainField.create({ name, icon });
     res.status(201).json({ success: true, data: field, message: 'فیلد اصلی اضافه شد.' });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+// تغییر وضعیت نمایش فیلد اصلی
+router.put('/main-fields/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const field = await MainField.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ success: true, data: field, message: 'تغییرات ذخیره شد.' });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
@@ -38,9 +49,15 @@ router.get('/', async (req, res) => {
 // افزودن شاخه جدید
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { name, mainField, icon, depositAmount, taxPercent, showTax } = req.body;
+    const { name, mainField, icon, depositPercent, commissionPercent, taxPercent, showTax } = req.body;
     if (!name || !mainField) return res.status(400).json({ success: false, message: 'نام شاخه و فیلد اصلی الزامی است.' });
-    const category = await Category.create({ name, mainField, icon, depositAmount, taxPercent, showTax });
+    const category = await Category.create({ 
+      name, mainField, icon, 
+      depositPercent: Number(depositPercent) || 30, 
+      commissionPercent: Number(commissionPercent) || 10, 
+      taxPercent: Number(taxPercent) || 10, 
+      showTax 
+    });
     res.status(201).json({ success: true, data: category, message: 'شاخه اضافه شد.' });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });

@@ -16,6 +16,7 @@ import menuRoutes from './routes/menus.js';
 import orderRoutes from './routes/orders.js';
 import serviceRoutes from './routes/services.js';
 import walletRoutes from './routes/wallet.js';
+import employeeRoutes from './routes/employees.js';
 
 dotenv.config();
 const app = express();
@@ -36,6 +37,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/orders', orderRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/employees', employeeRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is ready.' });
