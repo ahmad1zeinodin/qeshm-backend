@@ -6,7 +6,7 @@ import { authenticateToken } from '../middleware/authMiddleware.js';
 const router = express.Router();
 const requireAdmin = (req, res, next) => { if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'دسترسی غیرمجاز.' }); next(); };
 
-// دریافت لیست فیلدها
+// دریافت فیلدها
 router.get('/main-fields', async (req, res) => {
   try {
     const fields = await MainField.find({ isActive: true }).sort({ createdAt: -1 });
@@ -22,12 +22,10 @@ router.post('/main-fields', authenticateToken, requireAdmin, async (req, res) =>
     
     const existing = await MainField.findOne({ name });
     if (existing) {
-      // اگر از قبل بود، فقط فعالش کن (ارور نده)
       existing.isActive = true;
       await existing.save();
       return res.status(200).json({ success: true, data: existing, message: 'فیلد از قبل وجود داشت و فعال شد.' });
     }
-    
     const field = await MainField.create({ name, icon });
     res.status(201).json({ success: true, data: field, message: 'فیلد اصلی اضافه شد.' });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
@@ -52,13 +50,27 @@ router.get('/', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// ثبت زیرشاخه
+// ثبت زیرشاخه جدید
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { name, mainField, icon, depositPercent, commissionPercent, taxPercent, showTax } = req.body;
     if (!name || !mainField) return res.status(400).json({ success: false, message: 'نام و فیلد اصلی الزامی است.' });
     const category = await Category.create({ name, mainField, icon, depositPercent: Number(depositPercent) || 30, commissionPercent: Number(commissionPercent) || 10, taxPercent: Number(taxPercent) || 10, showTax });
     res.status(201).json({ success: true, data: category, message: 'شاخه اضافه شد.' });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+// ✅ روت ویرایش که وجود نداشت
+router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { name, mainField, icon, depositPercent, commissionPercent, taxPercent, showTax } = req.body;
+    const category = await Category.findByIdAndUpdate(
+      req.params.id,
+      { name, mainField, icon, depositPercent: Number(depositPercent), commissionPercent: Number(commissionPercent), taxPercent: Number(taxPercent), showTax },
+      { new: true }
+    );
+    if (!category) return res.status(404).json({ success: false, message: 'شاخه پیدا نشد.' });
+    res.json({ success: true, data: category, message: 'ویرایش شد.' });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
