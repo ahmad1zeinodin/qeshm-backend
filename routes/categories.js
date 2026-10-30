@@ -4,12 +4,8 @@ import MainField from '../models/MainField.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
-const requireAdmin = (req, res, next) => { 
-  if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'دسترسی غیرمجاز.' }); 
-  next(); 
-};
+const requireAdmin = (req, res, next) => { if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'دسترسی غیرمجاز.' }); next(); };
 
-// دریافت همه فیلدهای اصلی
 router.get('/main-fields', async (req, res) => {
   try {
     const fields = await MainField.find({ isActive: true }).sort({ createdAt: -1 });
@@ -17,7 +13,6 @@ router.get('/main-fields', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// افزودن فیلد اصلی جدید
 router.post('/main-fields', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { name, icon } = req.body;
@@ -27,7 +22,6 @@ router.post('/main-fields', authenticateToken, requireAdmin, async (req, res) =>
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// تغییر وضعیت نمایش فیلد اصلی
 router.put('/main-fields/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const field = await MainField.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -35,7 +29,15 @@ router.put('/main-fields/:id', authenticateToken, requireAdmin, async (req, res)
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// دریافت همه شاخه‌ها
+// ✅ روت جدید برای پاک کردن همه فیلدها و زیرشاخه‌ها
+router.delete('/main-fields/delete-all', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    await MainField.deleteMany({});
+    await Category.deleteMany({});
+    res.json({ success: true, message: 'تمام فیلدها و زیرشاخه‌ها پاک شدند.' });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
 router.get('/', async (req, res) => {
   try {
     const { mainField } = req.query;
@@ -46,23 +48,15 @@ router.get('/', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// افزودن شاخه جدید
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { name, mainField, icon, depositPercent, commissionPercent, taxPercent, showTax } = req.body;
     if (!name || !mainField) return res.status(400).json({ success: false, message: 'نام شاخه و فیلد اصلی الزامی است.' });
-    const category = await Category.create({ 
-      name, mainField, icon, 
-      depositPercent: Number(depositPercent) || 30, 
-      commissionPercent: Number(commissionPercent) || 10, 
-      taxPercent: Number(taxPercent) || 10, 
-      showTax 
-    });
+    const category = await Category.create({ name, mainField, icon, depositPercent: Number(depositPercent) || 30, commissionPercent: Number(commissionPercent) || 10, taxPercent: Number(taxPercent) || 10, showTax });
     res.status(201).json({ success: true, data: category, message: 'شاخه اضافه شد.' });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// حذف شاخه
 router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     await Category.findByIdAndDelete(req.params.id);
