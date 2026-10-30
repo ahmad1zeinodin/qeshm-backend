@@ -6,6 +6,7 @@ import { authenticateToken } from '../middleware/authMiddleware.js';
 const router = express.Router();
 const requireAdmin = (req, res, next) => { if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'دسترسی غیرمجاز.' }); next(); };
 
+// ✅ دریافت فیلدهای اصلی از کالکشن اصلی
 router.get('/main-fields', async (req, res) => {
   try {
     const fields = await MainField.find({ isActive: true }).sort({ createdAt: -1 });
@@ -13,10 +14,15 @@ router.get('/main-fields', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+// ✅ ثبت فیلد جدید (اگر تکراری بود ارور نمیده)
 router.post('/main-fields', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { name, icon } = req.body;
     if (!name) return res.status(400).json({ success: false, message: 'نام فیلد اصلی الزامی است.' });
+    
+    const existing = await MainField.findOne({ name });
+    if (existing) return res.status(400).json({ success: false, message: 'این فیلد قبلا ساخته شده است.' });
+    
     const field = await MainField.create({ name, icon });
     res.status(201).json({ success: true, data: field, message: 'فیلد اصلی اضافه شد.' });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
@@ -26,15 +32,6 @@ router.put('/main-fields/:id', authenticateToken, requireAdmin, async (req, res)
   try {
     const field = await MainField.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json({ success: true, data: field, message: 'تغییرات ذخیره شد.' });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
-
-// ✅ روت جدید برای پاک کردن همه فیلدها و زیرشاخه‌ها
-router.delete('/main-fields/delete-all', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    await MainField.deleteMany({});
-    await Category.deleteMany({});
-    res.json({ success: true, message: 'تمام فیلدها و زیرشاخه‌ها پاک شدند.' });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
