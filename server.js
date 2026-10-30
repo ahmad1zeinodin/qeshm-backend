@@ -22,10 +22,9 @@ import newsRoutes from './routes/news.js';
 dotenv.config();
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json({ limit: '50mb' })); // حجم عکس‌ها
+app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// ثبت روت‌ها
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/skills', skillRoutes);
