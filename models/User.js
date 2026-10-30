@@ -7,13 +7,27 @@ const userSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   role: { type: String, enum: ['client', 'worker', 'admin', 'support', 'employee'], default: 'client' },
   
-  // اطلاعات پروفایل
+  // اطلاعات پایه پروفایل
   profilePhoto: { type: String, default: '' },
   bio: { type: String, default: '' },
   nationalId: { type: String, default: '' },
   sheba: { type: String, default: '' },
   emergencyPhone: { type: String, default: '' },
   adminBadgeText: { type: String, default: '' },
+  maritalStatus: { type: String, enum: ['single', 'married', ''], default: '' }, // وضعیت تاهل
+  
+  // مدارک و مستندات (آپلود شده)
+  documents: {
+    nationalCardPhoto: { type: String, default: '' }, // عکس کارت ملی
+    birthCertificatePhoto: { type: String, default: '' }, // عکس شناسنامه
+    businessLicense: { type: String, default: '' }, // جواز کسب (برای اصناف)
+    skillCertificate: { type: String, default: '' }, // مدارک تخصصی (برای خدمات)
+  },
+
+  // احراز هویت (سامانه هدا)
+  isVerified: { type: Boolean, default: false },
+  verificationStatus: { type: String, enum: ['pending', 'approved', 'rejected', 'none'], default: 'none' },
+  verificationTrackId: { type: String, default: '' }, // کد رهگیری هدا
   
   // فیلدها و دسته‌بندی
   mainField: { type: String, default: '' },

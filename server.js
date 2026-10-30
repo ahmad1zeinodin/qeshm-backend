@@ -17,6 +17,7 @@ import orderRoutes from './routes/orders.js';
 import serviceRoutes from './routes/services.js';
 import walletRoutes from './routes/wallet.js';
 import employeeRoutes from './routes/employees.js';
+import newsRoutes from './routes/news.js'; // ✅ جدید
 
 dotenv.config();
 const app = express();
@@ -38,6 +39,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/news', newsRoutes); // ✅ جدید
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is ready.' });

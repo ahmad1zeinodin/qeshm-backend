@@ -33,10 +33,13 @@ router.get('/workers', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
-// ۳. ثبت سفیر جدید توسط ادمین
+// ۳. ثبت سفیر جدید توسط ادمین (همراه با مدارک و اطلاعات تکمیلی)
 router.post('/workers', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { name, email, phone, password, nationalId, emergencyPhone, sheba, adminBadgeText, mainField, categoryId } = req.body;
+    const { 
+      name, email, phone, password, nationalId, emergencyPhone, sheba, 
+      adminBadgeText, mainField, categoryId, maritalStatus, documents 
+    } = req.body;
     
     if (!name || !email || !phone || !password) {
       return res.status(400).json({ success: false, message: 'نام، ایمیل، تلفن و رمز عبور الزامی است.' });
@@ -50,7 +53,8 @@ router.post('/workers', authenticateToken, requireAdmin, async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     
     const worker = await User.create({
-      name, email, phone, passwordHash, nationalId, emergencyPhone, sheba, adminBadgeText, mainField, categoryId,
+      name, email, phone, passwordHash, nationalId, emergencyPhone, sheba, 
+      adminBadgeText, mainField, categoryId, maritalStatus, documents,
       role: 'worker'
     });
     
@@ -70,10 +74,26 @@ router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
-// ۵. دریافت لیست سفارشات
+// ۵. دریافت لیست سفارشات (با قابلیت فیلتر)
 router.get('/orders', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const orders = await Order.find().populate('clientId', 'name').populate('workerId', 'name').sort({ createdAt: -1 });
+    const { mainField, status, isCancelled } = req.query;
+    let query = {};
+    
+    // فیلتر بر اساس وضعیت
+    if (status) query.status = status;
+    
+    // فیلتر بر اساس کنسلی
+    if (isCancelled === 'true') query.status = 'cancelled';
+
+    // اگر فیلد اصلی انتخاب شده باشد (در اینجا فرض بر این است که سفارش به فیلد اصلی متصل است)
+    // if (mainField) query.mainField = mainField;
+
+    const orders = await Order.find(query)
+      .populate('clientId', 'name')
+      .populate('workerId', 'name')
+      .sort({ createdAt: -1 });
+      
     res.json({ success: true, data: orders });
   } catch (err) { 
     res.status(500).json({ success: false, message: err.message }); 

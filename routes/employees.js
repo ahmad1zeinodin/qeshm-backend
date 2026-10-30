@@ -17,10 +17,13 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// ۲. ثبت همکار جدید (با دسترسی‌های مشخص)
+// ۲. ثبت همکار جدید (با دسترسی‌ها، مدارک و اطلاعات پرسنلی)
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { name, email, phone, password, personnelNumber, jobTitle, adminPermissions, role } = req.body;
+    const { 
+      name, email, phone, password, personnelNumber, jobTitle, 
+      adminPermissions, role, maritalStatus, emergencyPhone, nationalId, documents 
+    } = req.body;
     
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: 'نام، ایمیل و رمز عبور الزامی است.' });
@@ -34,7 +37,8 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
     const employee = await User.create({
       name, email, phone, passwordHash, personnelNumber, jobTitle, 
       adminPermissions: adminPermissions || {},
-      role: role || 'employee'
+      role: role || 'employee',
+      maritalStatus, emergencyPhone, nationalId, documents
     });
     
     res.status(201).json({ success: true, data: employee, message: 'همکار ثبت شد.' });
