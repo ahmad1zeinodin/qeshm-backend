@@ -45,7 +45,7 @@ router.get('/', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// ✅ این روت رو اضافه کردم (دریافت یک زیرشاخه خاص)
+// ✅ این روت رو اضافه کردم تا دکمه مداد بتونه اطلاعات رو بگیره
 router.get('/:id', async (req, res) => {
   try {
     const category = await Category.findById(req.params.id);
