@@ -45,6 +45,15 @@ router.get('/', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+// ✅ این روت رو اضافه کردم (دریافت یک زیرشاخه خاص)
+router.get('/:id', async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.id);
+    if (!category) return res.status(404).json({ success: false, message: 'شاخه پیدا نشد.' });
+    res.json({ success: true, data: category });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { name, mainField, icon, depositPercent, commissionPercent, taxPercent, showTax } = req.body;
@@ -54,7 +63,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// ✅ روت ویرایش (PUT)
+// ✅ روت ویرایش
 router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { name, mainField, icon, depositPercent, commissionPercent, taxPercent, showTax } = req.body;
