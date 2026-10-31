@@ -15,12 +15,11 @@ const userSchema = new mongoose.Schema({
   adminBadgeText: { type: String, default: '' },
   maritalStatus: { type: String, enum: ['single', 'married', ''], default: '' },
   
-  // ✅ تبدیل به آرایه برای پشتیبانی از چند عکس
   documents: {
-    nationalCardPhoto: [{ type: String }],
-    birthCertificatePhoto: [{ type: String }],
-    businessLicense: [{ type: String }],
-    skillCertificate: [{ type: String }],
+    nationalCardPhoto: { type: String, default: '' },
+    birthCertificatePhoto: { type: String, default: '' },
+    businessLicense: { type: String, default: '' },
+    skillCertificate: { type: String, default: '' },
   },
 
   isVerified: { type: Boolean, default: false },
