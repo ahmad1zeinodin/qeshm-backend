@@ -49,15 +49,11 @@ const userSchema = new mongoose.Schema({
   otpCode: { type: String },
   otpExpires: { type: Date },
 
-  // ✅ فیلد جدید: لیست خدمات یا منوی سفیر
-  services: [{
-    title: { type: String, required: true },
-    description: { type: String, default: '' },
-    price: { type: Number, required: true },
-    image: { type: String, default: '' },
-    isActive: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now }
-  }],
+  // ✅ فیلدهای مدیریت محتوا (بر اساس فیلد اصلی)
+  services: [{ title: String, description: String, price: Number, image: String, isActive: Boolean, createdAt: Date }],
+  menu: [{ title: String, description: String, price: Number, image: String, category: String, isActive: Boolean, createdAt: Date }],
+  products: [{ title: String, description: String, price: Number, image: String, stock: Number, isActive: Boolean, createdAt: Date }],
+  news: [{ title: String, content: String, image: String, createdAt: Date }],
 
   createdAt: { type: Date, default: Date.now },
 });

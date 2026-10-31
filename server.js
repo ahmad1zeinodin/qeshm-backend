@@ -18,14 +18,13 @@ import serviceRoutes from './routes/services.js';
 import walletRoutes from './routes/wallet.js';
 import employeeRoutes from './routes/employees.js';
 import newsRoutes from './routes/news.js';
+import workerContentRoutes from './routes/workerContent.js'; // ✅ روت جدید
 
 dotenv.config();
 const app = express();
-
-// ✅ این خط مشکل کدگذاری فارسی رو حل میکنه
-app.use(express.json({ limit: '50mb', type: 'application/json' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors({ origin: true, credentials: true }));
+app.use(express.json({ limit: '50mb' })); 
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -43,6 +42,7 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/news', newsRoutes);
+app.use('/api/worker-content', workerContentRoutes); // ✅ روت جدید
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is ready.' });
