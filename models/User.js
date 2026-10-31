@@ -15,11 +15,12 @@ const userSchema = new mongoose.Schema({
   adminBadgeText: { type: String, default: '' },
   maritalStatus: { type: String, enum: ['single', 'married', ''], default: '' },
   
+  // ✅ تبدیل به آرایه برای پشتیبانی از چند عکس
   documents: {
-    nationalCardPhoto: { type: String, default: '' },
-    birthCertificatePhoto: { type: String, default: '' },
-    businessLicense: { type: String, default: '' },
-    skillCertificate: { type: String, default: '' },
+    nationalCardPhoto: [{ type: String }],
+    birthCertificatePhoto: [{ type: String }],
+    businessLicense: [{ type: String }],
+    skillCertificate: [{ type: String }],
   },
 
   isVerified: { type: Boolean, default: false },
@@ -49,7 +50,6 @@ const userSchema = new mongoose.Schema({
   otpCode: { type: String },
   otpExpires: { type: Date },
 
-  // ✅ فیلدهای مدیریت محتوا (بر اساس فیلد اصلی)
   services: [{ title: String, description: String, price: Number, image: String, isActive: Boolean, createdAt: Date }],
   menu: [{ title: String, description: String, price: Number, image: String, category: String, isActive: Boolean, createdAt: Date }],
   products: [{ title: String, description: String, price: Number, image: String, stock: Number, isActive: Boolean, createdAt: Date }],
