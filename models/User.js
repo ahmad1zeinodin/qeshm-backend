@@ -46,9 +46,18 @@ const userSchema = new mongoose.Schema({
   personnelNumber: { type: String, default: '' },
   jobTitle: { type: String, default: '' },
   
-  // ✅ فیلدهای جدید برای کد یکبار مصرف
   otpCode: { type: String },
   otpExpires: { type: Date },
+
+  // ✅ فیلد جدید: لیست خدمات یا منوی سفیر
+  services: [{
+    title: { type: String, required: true },
+    description: { type: String, default: '' },
+    price: { type: Number, required: true },
+    image: { type: String, default: '' },
+    isActive: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now }
+  }],
 
   createdAt: { type: Date, default: Date.now },
 });

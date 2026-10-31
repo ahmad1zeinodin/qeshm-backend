@@ -27,14 +27,14 @@ router.get('/online', async (req, res) => {
   }
 });
 
-// دریافت سفیران یک دسته‌بندی خاص
+// ✅ دریافت سفیران یک دسته‌بندی خاص (اصلاح شد)
 router.get('/category/:categoryId', async (req, res) => {
   try {
     const workers = await User.find({
       role: 'worker',
       isOnline: true,
       isSuspended: false,
-      // فعلاً فیلتر بر اساس مهارت را انجام نمی‌دهیم تا داده‌ها نمایش داده شوند
+      categoryId: req.params.categoryId // ✅ این خط فیلتر رو فعال میکنه
     }).select('-passwordHash -adminPermissions');
     res.json({ success: true, data: workers });
   } catch (err) {
