@@ -17,12 +17,11 @@ router.post('/main-fields', authenticateToken, requireAdmin, async (req, res) =>
   try {
     const { name, icon } = req.body;
     if (!name) return res.status(400).json({ success: false, message: 'نام الزامی است.' });
-    
     const existing = await MainField.findOne({ name });
     if (existing) {
       existing.isActive = true;
       await existing.save();
-      return res.status(200).json({ success: true, data: existing, message: 'فیلد از قبل وجود داشت و فعال شد.' });
+      return res.status(200).json({ success: true, data: existing, message: 'فیلد از قبل وجود داشت.' });
     }
     const field = await MainField.create({ name, icon });
     res.status(201).json({ success: true, data: field, message: 'فیلد اصلی اضافه شد.' });
