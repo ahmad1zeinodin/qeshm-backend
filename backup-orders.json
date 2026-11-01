@@ -1,0 +1,28 @@
+[
+  {
+    "_id": "6ae3707ed37a46785c691648",
+    "clientId": "6ae290f5d5d272a309f568e4",
+    "serviceTitle": "??? ?????",
+    "description": "",
+    "address": "???",
+    "depositAmount": 50000,
+    "totalAmount": 0,
+    "status": "pending",
+    "createdAt": "2026-10-29T16:12:46.656Z",
+    "updatedAt": "2026-10-29T16:12:46.656Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ae395c27c07b03d738d786b",
+    "clientId": "6ae290f5d5d272a309f568e4",
+    "serviceTitle": "??? ?????",
+    "description": "",
+    "address": "???",
+    "depositAmount": 75000,
+    "totalAmount": 0,
+    "status": "pending",
+    "createdAt": "2026-10-29T18:51:46.101Z",
+    "updatedAt": "2026-10-29T18:51:46.101Z",
+    "__v": 0
+  }
+]
