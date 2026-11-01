@@ -1,10 +1,12 @@
+// آدرس فایل: C:\Users\Zinodeini\service_marketplace-main\server\routes\workers.js
+
 import express from 'express';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// ✅ ۱. مسیر تغییر وضعیت را بالا آوردیم تا با /:id تداخل نداشته باشد
+// ✅ مسیر تغییر وضعیت (اول از همه باشه تا با /:id تداخل نکنه)
 router.put('/me/online-status', authenticateToken, async (req, res) => {
   try {
     const { isOnline } = req.body;
@@ -48,7 +50,7 @@ router.get('/category/:categoryId', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// ✅ ۲. مسیر /:id باید همیشه در انتهای همه مسیرها باشد
+// ✅ مسیر /:id باید همیشه در انتها باشه
 router.get('/:id', async (req, res) => {
   try {
     const worker = await User.findById(req.params.id).select('-passwordHash -adminPermissions');
