@@ -43,6 +43,24 @@ router.get('/category/:categoryId', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+// ✅ مسیر تست برای دیباگ
+router.get('/debug/:categoryId', async (req, res) => {
+  try {
+    const workers = await User.find({ categoryId: req.params.categoryId });
+    res.json({ 
+      success: true, 
+      count: workers.length,
+      data: workers.map(w => ({ 
+        name: w.name, 
+        categoryId: w.categoryId, 
+        isOnline: w.isOnline, 
+        isSuspended: w.isSuspended, 
+        role: w.role 
+      }))
+    });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const worker = await User.findById(req.params.id).select('-passwordHash -adminPermissions');
