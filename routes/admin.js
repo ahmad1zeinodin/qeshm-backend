@@ -21,7 +21,7 @@ router.get('/stats', authenticateToken, requireAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// دریافت لیست سفیران
+// ✅ دریافت لیست سفیران (همه، نه فقط آنلاین‌ها)
 router.get('/workers', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const workers = await User.find({ role: 'worker' }).select('-passwordHash');
@@ -42,7 +42,7 @@ router.post('/workers', authenticateToken, requireAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// ✅ ویرایش سفیر
+// ویرایش سفیر
 router.put('/workers/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { name, email, phone, nationalId, emergencyPhone, sheba, adminBadgeText, mainField, categoryId, maritalStatus } = req.body;
@@ -52,7 +52,7 @@ router.put('/workers/:id', authenticateToken, requireAdmin, async (req, res) => 
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// ✅ حذف سفیر
+// حذف سفیر
 router.delete('/workers/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
