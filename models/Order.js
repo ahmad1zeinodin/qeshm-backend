@@ -3,23 +3,21 @@ import mongoose from 'mongoose';
 const orderSchema = new mongoose.Schema({
   clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   workerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  serviceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Service', required: true }, // ✅ اضافه شد
   serviceTitle: { type: String, required: true },
   items: [{ name: String, price: Number, quantity: Number }],
   
-  // مبالغ (به ریال)
   basePrice: { type: Number, required: true },
   taxAmount: { type: Number, default: 0 },
   totalPrice: { type: Number, required: true },
   
-  // تسویه
-  depositAmount: { type: Number, default: 0 }, // بیعانه پرداخت شده
-  commissionAmount: { type: Number, default: 0 }, // سهم پلتفرم
-  workerShare: { type: Number, default: 0 }, // سهم سفیر (از بیعانه)
+  depositAmount: { type: Number, default: 0 },
+  commissionAmount: { type: Number, default: 0 },
+  workerShare: { type: Number, default: 0 },
   
-  // وضعیت
   status: { type: String, enum: ['pending', 'accepted', 'in_progress', 'completed', 'cancelled'], default: 'pending' },
-  isSettled: { type: Boolean, default: false }, // آیا تسویه نهایی شده است؟
-  settledAt: { type: Date, default: null }, // زمان تسویه
+  isSettled: { type: Boolean, default: false },
+  settledAt: { type: Date, default: null },
   
   address: { type: String, default: '' },
   description: { type: String, default: '' },
