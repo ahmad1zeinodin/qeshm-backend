@@ -1,4 +1,6 @@
-﻿import express from 'express';
+﻿// آدرس فایل: C:\Users\Zinodeini\service_marketplace-main\server\server.js
+
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
@@ -18,7 +20,7 @@ import serviceRoutes from './routes/services.js';
 import walletRoutes from './routes/wallet.js';
 import employeeRoutes from './routes/employees.js';
 import newsRoutes from './routes/news.js';
-import workerContentRoutes from './routes/workerContent.js'; // ✅ روت جدید
+import workerContentRoutes from './routes/workerContent.js';
 
 dotenv.config();
 const app = express();
@@ -29,7 +31,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/skills', skillRoutes);
-app.use('/api/workers', workerRoutes);
+app.use('/api/workers', workerRoutes); // ✅ ثبت مسیر سفیران
 app.use('/api/settings', settingsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
@@ -42,10 +44,15 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/news', newsRoutes);
-app.use('/api/worker-content', workerContentRoutes); // ✅ روت جدید
+app.use('/api/worker-content', workerContentRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is ready.' });
+});
+
+// ✅ هندلر 404 برای دیباگ
+app.use((req, res, next) => {
+  res.status(404).json({ success: false, message: `آدرس پیدا نشد: ${req.method} ${req.originalUrl}` });
 });
 
 const MONGODB_URI = 'mongodb://root:sfx3eq0sFAojrbgo@services.irn12.chabokan.net:16658/qeshm?authSource=admin';
