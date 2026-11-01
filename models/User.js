@@ -49,9 +49,10 @@ const userSchema = new mongoose.Schema({
   otpCode: { type: String },
   otpExpires: { type: Date },
 
-  services: [{ title: String, description: String, price: Number, image: String, isActive: Boolean, createdAt: Date }],
-  menu: [{ title: String, description: String, price: Number, image: String, category: String, isActive: Boolean, createdAt: Date }],
-  products: [{ title: String, description: String, price: Number, image: String, stock: Number, isActive: Boolean, createdAt: Date }],
+  // ✅ فیلد isActive به خدمات اضافه شد
+  services: [{ title: String, description: String, price: Number, image: String, isActive: { type: Boolean, default: true }, createdAt: Date }],
+  menu: [{ title: String, description: String, price: Number, image: String, category: String, isActive: { type: Boolean, default: true }, createdAt: Date }],
+  products: [{ title: String, description: String, price: Number, image: String, stock: Number, isActive: { type: Boolean, default: true }, createdAt: Date }],
   news: [{ title: String, content: String, image: String, createdAt: Date }],
 
   createdAt: { type: Date, default: Date.now },
