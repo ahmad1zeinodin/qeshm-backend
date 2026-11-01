@@ -1,5 +1,4 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
@@ -38,12 +37,10 @@ router.get('/category/:categoryId', async (req, res) => {
       role: 'worker',
       isOnline: true,
       isSuspended: { $ne: true },
-      categoryId: new mongoose.Types.ObjectId(req.params.categoryId)
+      categoryId: req.params.categoryId
     }).select('-passwordHash -adminPermissions');
     res.json({ success: true, data: workers });
-  } catch (err) { 
-    res.status(500).json({ success: false, message: err.message }); 
-  }
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 router.get('/:id', async (req, res) => {
