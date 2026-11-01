@@ -19,14 +19,14 @@ router.put('/me/online-status', authenticateToken, async (req, res) => {
 
 router.get('/featured', async (req, res) => {
   try {
-    const workers = await User.find({ role: 'worker', isOnline: true }).limit(4);
+    const workers = await User.find({ role: 'worker', isOnline: true, isSuspended: { $ne: true } }).limit(4);
     res.json({ success: true, data: workers });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 router.get('/online', async (req, res) => {
   try {
-    const workers = await User.find({ role: 'worker', isOnline: true, isSuspended: false }).select('-passwordHash -adminPermissions');
+    const workers = await User.find({ role: 'worker', isOnline: true, isSuspended: { $ne: true } }).select('-passwordHash -adminPermissions');
     res.json({ success: true, data: workers });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
@@ -36,28 +36,10 @@ router.get('/category/:categoryId', async (req, res) => {
     const workers = await User.find({
       role: 'worker',
       isOnline: true,
-      isSuspended: false,
+      isSuspended: { $ne: true },
       categoryId: req.params.categoryId
     }).select('-passwordHash -adminPermissions');
     res.json({ success: true, data: workers });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
-
-// ✅ مسیر تست برای دیباگ
-router.get('/debug/:categoryId', async (req, res) => {
-  try {
-    const workers = await User.find({ categoryId: req.params.categoryId });
-    res.json({ 
-      success: true, 
-      count: workers.length,
-      data: workers.map(w => ({ 
-        name: w.name, 
-        categoryId: w.categoryId, 
-        isOnline: w.isOnline, 
-        isSuspended: w.isSuspended, 
-        role: w.role 
-      }))
-    });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
