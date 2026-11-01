@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, unique: true, sparse: true },
+  email: { type: String, unique: true, sparse: true }, // ✅ sparse اضافه شد
   phone: { type: String, required: true },
   passwordHash: { type: String, required: true },
   role: { type: String, enum: ['client', 'worker', 'admin', 'support', 'employee'], default: 'client' },
@@ -49,7 +49,6 @@ const userSchema = new mongoose.Schema({
   otpCode: { type: String },
   otpExpires: { type: Date },
 
-  // ✅ فیلد isActive به خدمات اضافه شد
   services: [{ title: String, description: String, price: Number, image: String, isActive: { type: Boolean, default: true }, createdAt: Date }],
   menu: [{ title: String, description: String, price: Number, image: String, category: String, isActive: { type: Boolean, default: true }, createdAt: Date }],
   products: [{ title: String, description: String, price: Number, image: String, stock: Number, isActive: { type: Boolean, default: true }, createdAt: Date }],
