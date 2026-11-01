@@ -1,27 +1,22 @@
-// آدرس فایل: C:\Users\Zinodeini\service_marketplace-main\server\routes\workers.js
-
 import express from 'express';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// ✅ مسیر تغییر وضعیت (اول از همه باشه تا با /:id تداخل نکنه)
 router.put('/me/online-status', authenticateToken, async (req, res) => {
   try {
     const { isOnline } = req.body;
     if (req.user.role !== 'worker') {
-      return res.status(403).json({ success: false, message: 'فقط سفیران می‌توانند وضعیت خود را تغییر دهند.' });
+      return res.status(403).json({ success: false, message: 'Only workers can change status.' });
     }
-    
     await User.findByIdAndUpdate(req.user.id, { isOnline });
-    res.json({ success: true, message: 'وضعیت با موفقیت تغییر کرد.' });
+    res.json({ success: true, message: 'Status updated.' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// دریافت سفیران ویژه
 router.get('/featured', async (req, res) => {
   try {
     const workers = await User.find({ role: 'worker', isOnline: true }).limit(4);
@@ -29,7 +24,6 @@ router.get('/featured', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// دریافت لیست سفیران آنلاین
 router.get('/online', async (req, res) => {
   try {
     const workers = await User.find({ role: 'worker', isOnline: true, isSuspended: false }).select('-passwordHash -adminPermissions');
@@ -37,7 +31,6 @@ router.get('/online', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// دریافت سفیران یک دسته‌بندی خاص
 router.get('/category/:categoryId', async (req, res) => {
   try {
     const workers = await User.find({
@@ -50,7 +43,6 @@ router.get('/category/:categoryId', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// ✅ مسیر /:id باید همیشه در انتها باشه
 router.get('/:id', async (req, res) => {
   try {
     const worker = await User.findById(req.params.id).select('-passwordHash -adminPermissions');

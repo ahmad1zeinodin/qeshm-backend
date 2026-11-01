@@ -1,6 +1,4 @@
-﻿// آدرس فایل: C:\Users\Zinodeini\service_marketplace-main\server\server.js
-
-import express from 'express';
+﻿import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
@@ -31,7 +29,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/skills', skillRoutes);
-app.use('/api/workers', workerRoutes); // ✅ ثبت مسیر سفیران
+app.use('/api/workers', workerRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
@@ -50,16 +48,15 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is ready.' });
 });
 
-// ✅ هندلر 404 برای دیباگ
 app.use((req, res, next) => {
-  res.status(404).json({ success: false, message: `آدرس پیدا نشد: ${req.method} ${req.originalUrl}` });
+  res.status(404).json({ success: false, message: `Not found: ${req.method} ${req.originalUrl}` });
 });
 
 const MONGODB_URI = 'mongodb://root:sfx3eq0sFAojrbgo@services.irn12.chabokan.net:16658/qeshm?authSource=admin';
 
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('✅ MongoDB connected'))
-  .catch(err => console.error('❌ DB Error:', err));
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('DB Error:', err));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
