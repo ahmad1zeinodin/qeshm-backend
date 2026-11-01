@@ -4,6 +4,21 @@ import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// ✅ ۱. مسیر تغییر وضعیت را بالا آوردیم تا با /:id تداخل نداشته باشد
+router.put('/me/online-status', authenticateToken, async (req, res) => {
+  try {
+    const { isOnline } = req.body;
+    if (req.user.role !== 'worker') {
+      return res.status(403).json({ success: false, message: 'فقط سفیران می‌توانند وضعیت خود را تغییر دهند.' });
+    }
+    
+    await User.findByIdAndUpdate(req.user.id, { isOnline });
+    res.json({ success: true, message: 'وضعیت با موفقیت تغییر کرد.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // دریافت سفیران ویژه
 router.get('/featured', async (req, res) => {
   try {
@@ -20,7 +35,7 @@ router.get('/online', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// دریافت سفیران یک دسته‌بندی خاص (فقط آنلاین‌ها)
+// دریافت سفیران یک دسته‌بندی خاص
 router.get('/category/:categoryId', async (req, res) => {
   try {
     const workers = await User.find({
@@ -33,18 +48,7 @@ router.get('/category/:categoryId', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// ✅ تغییر وضعیت آنلاین/آفلاین توسط خود سفیر
-router.put('/me/online-status', authenticateToken, async (req, res) => {
-  try {
-    const { isOnline } = req.body;
-    if (req.user.role !== 'worker') return res.status(403).json({ success: false, message: 'فقط سفیران می‌توانند وضعیت خود را تغییر دهند.' });
-    
-    await User.findByIdAndUpdate(req.user.id, { isOnline });
-    res.json({ success: true, message: 'وضعیت با موفقیت تغییر کرد.' });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
-
-// دریافت اطلاعات یک سفیر
+// ✅ ۲. مسیر /:id باید همیشه در انتهای همه مسیرها باشد
 router.get('/:id', async (req, res) => {
   try {
     const worker = await User.findById(req.params.id).select('-passwordHash -adminPermissions');
