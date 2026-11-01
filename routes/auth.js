@@ -7,12 +7,51 @@ import { authenticateToken } from '../middleware/authMiddleware.js';
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'qeshm-secret-key';
 
-// ۱. لاگین (با ایمیل یا شماره تلفن)
+// ✅ ۱. ثبت‌نام (هماهنگ با فرانت‌اند: نام، تلفن، رمز)
+router.post('/register', async (req, res) => {
+  try {
+    const { name, phone, password } = req.body;
+    
+    if (!name || !phone || !password) {
+      return res.status(400).json({ success: false, message: 'نام، شماره تلفن و رمز عبور الزامی است.' });
+    }
+
+    // بررسی وجود کاربر
+    const existingUser = await User.findOne({ phone });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'کاربری با این شماره تلفن قبلاً ثبت‌نام کرده است.' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      name,
+      phone,
+      passwordHash,
+      role: 'client',
+      isVerified: false,
+    });
+
+    // ✅ برگرداندن توکن به همراه اطلاعات کاربر
+    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    
+    res.status(201).json({ 
+      success: true, 
+      data: { 
+        user, 
+        accessToken: token, // ✅ برای هماهنگی با فرانت‌اند
+        refreshToken: token // ✅ برای هماهنگی با فرانت‌اند (همان توکن)
+      }, 
+      message: 'ثبت‌نام با موفقیت انجام شد.' 
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ۲. لاگین
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body; // اسم فیلد email هست، اما می‌تونه شماره تلفن هم باشه
-    
-    // ✅ جستجو با ایمیل یا شماره تلفن
+    const { email, password } = req.body;
     const user = await User.findOne({ 
       $or: [{ email: email }, { phone: email }] 
     });
@@ -23,13 +62,13 @@ router.post('/login', async (req, res) => {
     if (!isMatch) return res.status(401).json({ success: false, message: 'ایمیل/شماره تلفن یا رمز عبور اشتباه است.' });
 
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ success: true, data: { user, token }, message: 'ورود با موفقیت انجام شد.' });
+    res.json({ success: true, data: { user, accessToken: token, refreshToken: token }, message: 'ورود با موفقیت انجام شد.' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// ۲. درخواست کد یکبار مصرف (OTP)
+// ۳. درخواست OTP
 router.post('/request-otp', async (req, res) => {
   try {
     const { phone } = req.body;
@@ -50,7 +89,7 @@ router.post('/request-otp', async (req, res) => {
   }
 });
 
-// ۳. ورود با کد یکبار مصرف (OTP)
+// ۴. تایید OTP
 router.post('/verify-otp', async (req, res) => {
   try {
     const { phone, code } = req.body;
@@ -68,13 +107,13 @@ router.post('/verify-otp', async (req, res) => {
     await user.save();
 
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ success: true, data: { user, token }, message: 'ورود با موفقیت انجام شد.' });
+    res.json({ success: true, data: { user, accessToken: token, refreshToken: token }, message: 'ورود با موفقیت انجام شد.' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// ۴. تغییر پسورد
+// ۵. تغییر پسورد
 router.post('/change-password', authenticateToken, async (req, res) => {
   try {
     const { currentPassword, newPassword, targetUserId } = req.body;
@@ -101,7 +140,7 @@ router.post('/change-password', authenticateToken, async (req, res) => {
   }
 });
 
-// ۵. دریافت اطلاعات کاربر فعلی
+// ۶. دریافت اطلاعات کاربر فعلی
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-passwordHash');
