@@ -1,54 +1,127 @@
-import express from 'express';
-import Service from '../models/Service.js';
-import Category from '../models/Category.js';
-import { authenticateToken } from '../middleware/authMiddleware.js';
+import { useState, useEffect } from 'react';
+import { Plus, Trash2, ImagePlus, Loader2, Edit2 } from 'lucide-react';
+import api from '../../lib/axios';
 
-const router = express.Router();
+export default function ServicesContent() {
+  const [services, setServices] = useState([]);
+  const [form, setForm] = useState({ title: '', description: '', price: '', image: '', categoryId: '' });
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
-// دریافت خدمات خود سفیر
-router.get('/worker/me', authenticateToken, async (req, res) => {
-  try {
-    const services = await Service.find({ workerId: req.user.id, isActive: true }).populate('categoryId', 'name');
-    res.json({ success: true, data: services });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
+  const fetchServices = async () => {
+    try {
+      // ✅ تغییر مسیر به /services/worker/me
+      const res = await api.get('/services/worker/me');
+      if (res.data.success) setServices(res.data.data || []);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  };
 
-// دریافت خدمات یک سفیر (برای نمایش به مشتری)
-router.get('/worker/:workerId', async (req, res) => {
-  try {
-    const services = await Service.find({ workerId: req.params.workerId, isActive: true }).populate('categoryId', 'name depositAmount taxPercent showTax');
-    res.json({ success: true, data: services });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
+  useEffect(() => { fetchServices(); }, []);
 
-// افزودن خدمت جدید توسط سفیر
-router.post('/', authenticateToken, async (req, res) => {
-  try {
-    if (req.user.role !== 'worker' && req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'فقط سفیران.' });
-    }
-    const { title, description, price, categoryId } = req.body;
-    if (!title || !price || !categoryId) return res.status(400).json({ success: false, message: 'عنوان، قیمت و دسته الزامی است.' });
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm(prev => ({ ...prev, image: reader.result }));
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
 
-    const category = await Category.findById(categoryId);
-    if (!category) return res.status(404).json({ success: false, message: 'دسته‌بندی یافت نشد.' });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.title || !form.price) return alert('نام خدمت و قیمت الزامی است.');
+    try {
+      if (editingId) {
+        // ویرایش (در صورت نیاز)
+        await api.put(`/services/${editingId}`, form);
+        alert('✅ خدمت ویرایش شد.');
+        setEditingId(null);
+      } else {
+        // ✅ ثبت جدید با مسیر /services
+        await api.post('/services', form);
+        alert('✅ خدمت اضافه شد.');
+      }
+      setForm({ title: '', description: '', price: '', image: '', categoryId: '' });
+      fetchServices();
+    } catch (err) { alert('خطا در ثبت: ' + (err.response?.data?.message || err.message)); }
+  };
 
-    const service = await Service.create({ workerId: req.user.id, title, description, price, categoryId });
-    res.status(201).json({ success: true, data: service, message: 'خدمت جدید اضافه شد.' });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
+  const handleDelete = async (itemId) => {
+    if (!window.confirm('مطمئنی؟')) return;
+    try {
+      // ✅ حذف با مسیر /services/:id
+      await api.delete(`/services/${itemId}`);
+      fetchServices();
+    } catch (err) { alert('خطا در حذف'); }
+  };
 
-// حذف خدمت
-router.delete('/:id', authenticateToken, async (req, res) => {
-  try {
-    const service = await Service.findById(req.params.id);
-    if (!service) return res.status(404).json({ success: false, message: 'خدمت یافت نشد.' });
-    if (service.workerId.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'دسترسی غیرمجاز.' });
-    }
-    await Service.findByIdAndDelete(req.params.id);
-    res.json({ success: true, message: 'خدمت حذف شد.' });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
-});
+  const handleEditClick = (item) => {
+    setEditingId(item._id);
+    setForm({
+      title: item.title || '',
+      description: item.description || '',
+      price: item.price || '',
+      image: item.image || '',
+      categoryId: item.categoryId || ''
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-export default router;
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setForm({ title: '', description: '', price: '', image: '', categoryId: '' });
+  };
+
+  if (loading) return <div className="text-center py-10">در حال بارگذاری...</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white p-6 rounded-2xl border shadow-sm">
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Plus className="w-5 h-5" /> {editingId ? 'ویرایش خدمت' : 'افزودن خدمت جدید'}</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label className="block text-sm font-bold mb-1">نام خدمت</label><input type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" required /></div>
+            <div><label className="block text-sm font-bold mb-1">اجرت (تومان)</label><input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" required /></div>
+            <div><label className="block text-sm font-bold mb-1">شناسه دسته‌بندی</label><input type="text" value={form.categoryId} onChange={e => setForm({...form, categoryId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="مثلاً 6ae622f3298ab772109f40bd" required /></div>
+            <div><label className="block text-sm font-bold mb-1">عکس (اختیاری)</label><input type="file" accept="image/*" onChange={handleImageUpload} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+          </div>
+          <div><label className="block text-sm font-bold mb-1">توضیحات (اختیاری)</label><input type="text" value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+          <div className="flex gap-2">
+            <button type="submit" disabled={uploading} className="flex-1 bg-green-600 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2">{uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} {editingId ? 'ذخیره تغییرات' : 'ثبت خدمت'}</button>
+            {editingId && (
+              <button type="button" onClick={handleCancelEdit} className="bg-stone-200 text-stone-800 px-4 py-2 rounded-lg font-bold">انصراف</button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      <div className="bg-white p-6 rounded-2xl border shadow-sm">
+        <h2 className="text-lg font-bold mb-4">لیست خدمات فعلی</h2>
+        {services.length === 0 ? (
+          <p className="text-stone-500 text-center py-4">هنوز خدمتی ثبت نکردی.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {services.map(item => (
+              <div key={item._id} className="flex items-center gap-4 p-4 border rounded-xl bg-stone-50">
+                {item.image ? <img src={item.image} alt={item.title} className="w-16 h-16 object-cover rounded-lg" /> : <div className="w-16 h-16 bg-stone-200 rounded-lg flex items-center justify-center"><ImagePlus className="w-6 h-6 text-stone-400" /></div>}
+                <div className="flex-1">
+                  <h3 className="font-bold text-sm">{item.title}</h3>
+                  <p className="text-sm font-bold text-violet-700 mt-1">{item.price.toLocaleString()} تومان</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => handleEditClick(item)} className="text-blue-500 p-2 hover:bg-blue-50 rounded-lg"><Edit2 className="w-4 h-4" /></button>
+                  <button onClick={() => handleDelete(item._id)} className="text-red-500 p-2 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

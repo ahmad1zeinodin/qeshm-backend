@@ -48,6 +48,9 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is ready.' });
 });
 
+// ✅ اضافه کردن کلید مخفی ثابت برای جلوگیری از خطای Invalid Token
+process.env.JWT_SECRET = 'qeshm-secret-key-2026';
+
 app.use((req, res, next) => {
   res.status(404).json({ success: false, message: `Not found: ${req.method} ${req.originalUrl}` });
 });

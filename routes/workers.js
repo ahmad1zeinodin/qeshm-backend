@@ -7,10 +7,22 @@ const router = express.Router();
 router.put('/me/online-status', authenticateToken, async (req, res) => {
   try {
     const { isOnline } = req.body;
-    if (req.user.role !== 'worker') {
-      return res.status(403).json({ success: false, message: 'Only workers can change status.' });
+    
+    // دریافت شناسه کاربر از توکن و چک کردن مستقیم از دیتابیس برای جلوگیری از خطای تویستی توکن
+    const userId = req.user.id || req.user._id;
+    const currentUser = await User.findById(userId);
+
+    if (!currentUser || currentUser.role !== 'worker') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Only workers can change status.', 
+        receivedRole: currentUser?.role 
+      });
     }
-    await User.findByIdAndUpdate(req.user.id, { isOnline });
+
+    currentUser.isOnline = isOnline;
+    await currentUser.save();
+
     res.json({ success: true, message: 'Status updated.' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
