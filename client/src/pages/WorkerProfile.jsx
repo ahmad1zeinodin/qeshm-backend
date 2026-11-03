@@ -1,106 +1,87 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, MapPin, Star, Phone, ShoppingBag, Newspaper, Home, Ticket, Package } from 'lucide-react';
-import SEO from '../components/SEO';
-import api from '../lib/axios';
+import { User, Phone, ShieldAlert, BadgeCheck } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
+import api from '../../lib/axios';
 
 export default function WorkerProfile() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [worker, setWorker] = useState(null);
-  const [services, setServices] = useState([]);
+  const { user } = useAuthStore();
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get(`/workers/${id}`).then(res => {
-      if (res.data.success) setWorker(res.data.data);
-    }).catch(console.error);
-
-    api.get(`/services/worker/${id}`).then(res => {
-      if (res.data.success) setServices(res.data.data);
-    }).catch(console.error).finally(() => setLoading(false));
-  }, [id]);
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center">در حال بارگذاری...</div>;
-  if (!worker) return <div className="min-h-screen flex items-center justify-center">سفیر پیدا نشد.</div>;
-
-  const handleOrder = (service) => {
-    navigate(`/dashboard/client/request?serviceId=${service._id}&workerId=${worker._id}&serviceName=${encodeURIComponent(service.title)}&price=${service.price}`);
-  };
-
-  // ✅ تابع بازگشت هوشمند
-  const handleBack = () => {
-    if (window.history.length > 2) {
-      navigate(-1);
-    } else {
-      navigate('/services');
+    // دریافت اطلاعات به‌روزِ خودِ سفیر از دیتابیس
+    if (user?._id) {
+      api.get(`/workers/${user._id}`)
+        .then(res => {
+          if (res.data.success) setProfile(res.data.data);
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
     }
-  };
+  }, [user]);
 
-  const renderContent = () => {
-    if (services.length === 0) {
-      return (
-        <div className="bg-white p-6 rounded-2xl border text-center text-stone-500">
-          خدمتی ثبت نشده است.
-        </div>
-      );
-    }
+  if (loading) return <div className="text-center py-10">در حال بارگذاری...</div>;
+  if (!profile) return <div className="text-center py-10 text-red-500">اطلاعات پروفایل پیدا نشد.</div>;
 
-    return (
-      <div className="space-y-6">
-        <h2 className="text-xl font-bold border-r-4 border-orange-500 pr-3">لیست خدمات</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {services.map((item) => (
-            <div key={item._id} className="bg-white p-4 rounded-2xl border shadow-sm flex items-center gap-4">
-              <div className="w-16 h-16 bg-stone-100 flex items-center justify-center rounded-lg">
-                <ShoppingBag className="w-6 h-6 text-stone-300" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-stone-800">{item.title}</h3>
-                <p className="text-sm font-black text-violet-700 mt-1">{item.price.toLocaleString()} تومان</p>
-              </div>
-              <button
-                onClick={() => handleOrder(item)}
-                className="bg-violet-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-violet-700 transition"
-              >
-                رزرو
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
+  // ساخت نام با جنسیت (اگر فیلد جنسیت وجود داشته باشد)
+  const genderLabel = profile.gender === 'female' ? 'خانم' : profile.gender === 'male' ? 'آقای' : '';
+  const displayName = `${genderLabel} ${profile.name}`.trim();
 
   return (
-    <div className="min-h-screen bg-stone-50 py-10" dir="rtl">
-      <SEO title={worker.name} description={worker.bio} url={`/pro/${id}`} />
-      <div className="max-w-4xl mx-auto px-4">
-        {/* ✅ دکمه بازگشت هوشمند */}
-        <button
-          onClick={handleBack}
-          className="text-sm text-violet-600 hover:underline flex items-center gap-1 mb-6"
-        >
-          <ArrowRight className="w-4 h-4" /> بازگشت
-        </button>
-        
-        <div className="bg-white rounded-2xl border shadow-sm p-6 mb-6">
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="w-32 h-32 bg-stone-100 rounded-full flex items-center justify-center text-6xl border-4 border-white shadow-md">
-              {worker.profilePhoto ? <img src={worker.profilePhoto} alt={worker.name} className="w-full h-full rounded-full object-cover" /> : '👤'}
-            </div>
-            <div className="flex-1 text-center md:text-right">
-              <h1 className="text-2xl font-black text-stone-800 mb-2">{worker.name}</h1>
-              <p className="text-stone-500 mb-3">{worker.bio || 'متخصص خدمات'}</p>
-              <div className="flex flex-wrap justify-center md:justify-start items-center gap-4 text-sm text-stone-600">
-                <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-stone-400" /> {worker.district || 'قشم'}</span>
-                <span className="flex items-center gap-1"><Star className="w-4 h-4 text-amber-500 fill-amber-500" /> {worker.rating || 'جدید'}</span>
-                {worker.phone && <span className="flex items-center gap-1"><Phone className="w-4 h-4 text-stone-400" /> {worker.phone}</span>}
-              </div>
-            </div>
-          </div>
+    <div className="space-y-6" dir="rtl">
+      <h2 className="text-xl font-bold border-b pb-2 flex items-center gap-2">
+        <User className="w-5 h-5" /> پروفایل من
+      </h2>
+
+      <div className="bg-white p-6 rounded-2xl border flex flex-col items-center shadow-sm">
+        <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center text-5xl mb-4 overflow-hidden">
+          {profile.profilePhoto ? (
+            <img src={profile.profilePhoto} alt={profile.name} className="w-full h-full object-cover" />
+          ) : (
+            '👤'
+          )}
         </div>
-        {renderContent()}
+
+        <h3 className="text-lg font-bold">{displayName}</h3>
+        
+        {/* نمایش نشان ادمین (اگر وجود داشته باشد) */}
+        {profile.adminBadgeText && (
+          <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full mt-2 flex items-center gap-1">
+            <BadgeCheck className="w-3.5 h-3.5" /> {profile.adminBadgeText}
+          </span>
+        )}
+
+        {/* نمایش بیوگرافی واقعی */}
+        <p className="text-sm text-stone-500 mt-3 text-center">
+          {profile.bio || 'هنوز توضیحاتی برای پروفایل خود ثبت نکرده‌اید.'}
+        </p>
+
+        {/* نمایش شماره تماس */}
+        {profile.phone && (
+          <div className="flex items-center gap-2 mt-4 text-sm text-stone-600 bg-stone-50 px-4 py-2 rounded-lg border">
+            <Phone className="w-4 h-4 text-stone-400" />
+            <span dir="ltr">{profile.phone}</span>
+          </div>
+        )}
+
+        <p className="text-xs text-stone-400 mt-4">
+          ویرایش اطلاعات از طریق پشتیبانی امکان‌پذیر است.
+        </p>
+      </div>
+
+      <div className="bg-red-50 p-6 rounded-2xl border border-red-200 shadow-sm">
+        <h3 className="text-lg font-bold text-red-700 flex items-center gap-2 mb-2">
+          <ShieldAlert className="w-5 h-5" /> تماس اضطراری با پشتیبانی
+        </h3>
+        <p className="text-sm text-red-600 mb-4">
+          در صورت بروز هرگونه حادثه یا خطر، بلافاصله با شماره زیر تماس بگیرید:
+        </p>
+        <a
+          href="tel:09120000000"
+          className="inline-flex items-center gap-2 bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition-colors"
+        >
+          <Phone className="w-5 h-5" /> تماس فوری با پشتیبانی (۰۹۱۲۰۰۰۰۰۰۰)
+        </a>
       </div>
     </div>
   );

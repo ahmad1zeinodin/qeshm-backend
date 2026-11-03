@@ -6,6 +6,7 @@ export default function WorkersTab({ workers, mainFields, categories, fetchData 
   const [form, setForm] = useState({ 
     name: '', phone: '', password: '', nationalId: '', emergencyPhone: '', 
     sheba: '', adminBadgeText: '', mainField: '', categoryId: '', maritalStatus: 'single',
+    bio: '', // ✅ فیلد بیوگرافی اضافه شد
     documents: { nationalCardPhoto: '', birthCertificatePhoto: '', businessLicense: '', skillCertificate: '' }
   });
   const [filteredCategories, setFilteredCategories] = useState([]);
@@ -37,7 +38,6 @@ export default function WorkersTab({ workers, mainFields, categories, fetchData 
     if (!form.name || !form.phone) return alert('نام و شماره تماس الزامی است.');
     try {
       if (editingWorker) {
-        // ✅ در حالت ویرایش، فقط فیلدهای ضروری رو می‌فرستیم
         await api.put(`/admin/workers/${editingWorker._id}`, {
           name: form.name,
           phone: form.phone,
@@ -47,7 +47,8 @@ export default function WorkersTab({ workers, mainFields, categories, fetchData 
           adminBadgeText: form.adminBadgeText,
           mainField: form.mainField,
           categoryId: form.categoryId,
-          maritalStatus: form.maritalStatus
+          maritalStatus: form.maritalStatus,
+          bio: form.bio // ✅ ارسال بیوگرافی به بک‌اند
         });
         alert('✅ اطلاعات سفیر ویرایش شد.');
         setEditingWorker(null);
@@ -56,7 +57,7 @@ export default function WorkersTab({ workers, mainFields, categories, fetchData 
         await api.post('/admin/workers', form);
         alert('✅ سفیر ثبت شد.');
       }
-      setForm({ name: '', phone: '', password: '', nationalId: '', emergencyPhone: '', sheba: '', adminBadgeText: '', mainField: '', categoryId: '', maritalStatus: 'single', documents: { nationalCardPhoto: '', birthCertificatePhoto: '', businessLicense: '', skillCertificate: '' } });
+      setForm({ name: '', phone: '', password: '', nationalId: '', emergencyPhone: '', sheba: '', adminBadgeText: '', mainField: '', categoryId: '', maritalStatus: 'single', bio: '', documents: { nationalCardPhoto: '', birthCertificatePhoto: '', businessLicense: '', skillCertificate: '' } });
       setShowAddForm(false);
       fetchData();
     } catch (err) { alert('❌ خطا: ' + (err.response?.data?.message || err.message)); }
@@ -76,6 +77,7 @@ export default function WorkersTab({ workers, mainFields, categories, fetchData 
       mainField: worker.mainField || '',
       categoryId: worker.categoryId || '',
       maritalStatus: worker.maritalStatus || 'single',
+      bio: worker.bio || '', // ✅ پر کردن فیلد بیوگرافی
       documents: worker.documents || { nationalCardPhoto: '', birthCertificatePhoto: '', businessLicense: '', skillCertificate: '' }
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -109,7 +111,6 @@ export default function WorkersTab({ workers, mainFields, categories, fetchData 
     } catch (err) { alert('❌ خطا در تغییر رمز: ' + (err.response?.data?.message || err.message)); }
   };
 
-  // ✅ اصلاح جستجو با مقاوم‌سازی در برابر undefined
   const searchedWorkers = workers.filter(w => {
     const name = w.name || '';
     const phone = w.phone || '';
@@ -126,7 +127,7 @@ export default function WorkersTab({ workers, mainFields, categories, fetchData 
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           <button onClick={exportToCSV} className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 flex-1 md:flex-none"><Download className="w-4 h-4" /> خروجی اکسل</button>
-          <button onClick={() => { setShowAddForm(!showAddForm); setEditingWorker(null); setForm({ name: '', phone: '', password: '', nationalId: '', emergencyPhone: '', sheba: '', adminBadgeText: '', mainField: '', categoryId: '', maritalStatus: 'single', documents: { nationalCardPhoto: '', birthCertificatePhoto: '', businessLicense: '', skillCertificate: '' } }); }} className="bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 flex-1 md:flex-none"><Plus className="w-4 h-4" /> ثبت سفیر جدید</button>
+          <button onClick={() => { setShowAddForm(!showAddForm); setEditingWorker(null); setForm({ name: '', phone: '', password: '', nationalId: '', emergencyPhone: '', sheba: '', adminBadgeText: '', mainField: '', categoryId: '', maritalStatus: 'single', bio: '', documents: { nationalCardPhoto: '', birthCertificatePhoto: '', businessLicense: '', skillCertificate: '' } }); }} className="bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 flex-1 md:flex-none"><Plus className="w-4 h-4" /> ثبت سفیر جدید</button>
         </div>
       </div>
 
@@ -144,6 +145,18 @@ export default function WorkersTab({ workers, mainFields, categories, fetchData 
               <div><label className="block text-sm font-bold mb-1">وضعیت تأهل</label><select value={form.maritalStatus} onChange={e => setForm({ ...form, maritalStatus: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="single">مجرد</option><option value="married">متأهل</option></select></div>
               <div><label className="block text-sm font-bold mb-1">فیلد اصلی</label><select value={form.mainField} onChange={e => setForm({ ...form, mainField: e.target.value, categoryId: '' })} className="w-full border rounded-lg px-3 py-2 text-sm" required><option value="">انتخاب فیلد اصلی...</option>{mainFields.map(f => <option key={f._id} value={f.name}>{f.name}</option>)}</select></div>
               <div><label className="block text-sm font-bold mb-1">زیرشاخه</label><select value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" required disabled={!form.mainField}><option value="">{form.mainField ? 'انتخاب زیرشاخه...' : 'اول فیلد اصلی را انتخاب کنید'}</option>{filteredCategories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}</select></div>
+            </div>
+
+            {/* ✅ فیلد بیوگرافی اضافه شد */}
+            <div className="border-t pt-4 mt-4">
+              <label className="block text-sm font-bold mb-1">بیوگرافی (توضیحات پروفایل)</label>
+              <textarea 
+                value={form.bio} 
+                onChange={e => setForm({ ...form, bio: e.target.value })} 
+                className="w-full border rounded-lg px-3 py-2 text-sm" 
+                rows="3" 
+                placeholder="مثلاً: تعمیرکار و نظافتچی حرفه‌ای با ۱۰ سال سابقه..."
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4 mt-4">
