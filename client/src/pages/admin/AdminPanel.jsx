@@ -11,6 +11,7 @@ import OrdersTab from './OrdersTab';
 import UsersTab from './UsersTab';
 import SettingsTab from './SettingsTab';
 import SupportTab from './SupportTab';
+import ChangePasswordTab from './ChangePasswordTab';   // ✅ اضافه شد
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -66,7 +67,7 @@ export default function AdminPanel() {
         toggleMenu={toggleMenu} 
         mainFields={mainFields} 
         categories={categories} 
-        workers={workers} // ✅ پاس دادن لیست سفیران به سایدبار
+        workers={workers}
         onWorkerSelect={(worker) => { setSelectedWorker(worker); setActiveTab('worker-profile'); }} 
       />
 
@@ -98,6 +99,7 @@ export default function AdminPanel() {
           {activeTab === 'users' && <UsersTab users={users} />}
           {activeTab.startsWith('finance') && <FinanceTab activeTab={activeTab} financeSummary={financeSummary} transactions={transactions} withdrawals={withdrawals} vatReports={vatReports} fetchData={fetchData} />}
           {activeTab === 'support' && <SupportTab />}
+          {activeTab === 'changePassword' && <ChangePasswordTab />}   {/* ✅ اضافه شد */}
           {activeTab === 'settings' && <SettingsTab />}
         </div>
       </div>

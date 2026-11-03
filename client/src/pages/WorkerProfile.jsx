@@ -12,12 +12,10 @@ export default function WorkerProfile() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // دریافت اطلاعات سفیر
     api.get(`/workers/${id}`).then(res => {
       if (res.data.success) setWorker(res.data.data);
     }).catch(console.error);
 
-    // دریافت سرویس‌های سفیر از API (آدرس صحیح: /services/worker/...)
     api.get(`/services/worker/${id}`).then(res => {
       if (res.data.success) setServices(res.data.data);
     }).catch(console.error).finally(() => setLoading(false));
@@ -28,6 +26,15 @@ export default function WorkerProfile() {
 
   const handleOrder = (service) => {
     navigate(`/dashboard/client/request?serviceId=${service._id}&workerId=${worker._id}&serviceName=${encodeURIComponent(service.title)}&price=${service.price}`);
+  };
+
+  // ✅ تابع بازگشت هوشمند
+  const handleBack = () => {
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate('/services');
+    }
   };
 
   const renderContent = () => {
@@ -69,9 +76,13 @@ export default function WorkerProfile() {
     <div className="min-h-screen bg-stone-50 py-10" dir="rtl">
       <SEO title={worker.name} description={worker.bio} url={`/pro/${id}`} />
       <div className="max-w-4xl mx-auto px-4">
-        <Link to="/services" className="text-sm text-violet-600 hover:underline flex items-center gap-1 mb-6">
+        {/* ✅ دکمه بازگشت هوشمند */}
+        <button
+          onClick={handleBack}
+          className="text-sm text-violet-600 hover:underline flex items-center gap-1 mb-6"
+        >
           <ArrowRight className="w-4 h-4" /> بازگشت
-        </Link>
+        </button>
         
         <div className="bg-white rounded-2xl border shadow-sm p-6 mb-6">
           <div className="flex flex-col md:flex-row items-center gap-6">

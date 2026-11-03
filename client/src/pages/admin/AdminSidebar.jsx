@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { 
   LayoutDashboard, Users, Shield, ShoppingBag, Wallet, Settings, 
-  ChevronDown, ChevronRight, Layers, FolderTree, UserPlus, LifeBuoy, PlusCircle 
+  ChevronDown, ChevronRight, Layers, FolderTree, UserPlus, LifeBuoy, PlusCircle,
+  KeyRound
 } from 'lucide-react';
 
 export default function AdminSidebar({ activeTab, setActiveTab, expandedMenus, toggleMenu, mainFields, categories, workers, onWorkerSelect }) {
@@ -64,7 +65,6 @@ export default function AdminSidebar({ activeTab, setActiveTab, expandedMenus, t
 
                           {expandedCategories[cat._id] && (
                             <div className="mr-2 mt-1 space-y-1 border-r border-stone-200 pr-2">
-                              {/* ✅ تبدیل هر دو به String برای مقایسه درست */}
                               {workers.filter(w => String(w.categoryId) === String(cat._id)).map(worker => (
                                 <button 
                                   key={worker._id} 
@@ -122,6 +122,11 @@ export default function AdminSidebar({ activeTab, setActiveTab, expandedMenus, t
         </button>
         <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold ${activeTab === 'settings' ? 'bg-violet-600 text-white' : 'text-stone-600 hover:bg-stone-100'}`}>
           <Settings className="w-5 h-5" /> تنظیمات
+        </button>
+
+        {/* ✅ دکمه تغییر رمز */}
+        <button onClick={() => setActiveTab('changePassword')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold ${activeTab === 'changePassword' ? 'bg-violet-600 text-white' : 'text-stone-600 hover:bg-stone-100'}`}>
+          <KeyRound className="w-5 h-5" /> تغییر رمز
         </button>
       </div>
     </div>
