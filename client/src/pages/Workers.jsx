@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import {
   Search, X, Rocket, Users, Star, ArrowRight, MapPin,
   Home, Monitor, GraduationCap, HeartPulse, Sparkles,
@@ -66,10 +65,9 @@ function WorkerCardSkeleton() {
 export default function Workers() {
   const { groupedCategories, categories } = useCategories();
   const [searchParams]                   = useSearchParams();
-  const { t }                            = useTranslation();
 
   const [category,     setCategory]     = useState(searchParams.get('category') || '');
-  const [activeGroup,  setActiveGroup]  = useState('');   // UI-only — drives sub-chip row
+  const [activeGroup,  setActiveGroup]  = useState('');
   const [district,     setDistrict]     = useState('');
   const [minScore,     setMinScore]     = useState('');
   const [page,         setPage]         = useState(1);
@@ -77,7 +75,6 @@ export default function Workers() {
   const [activeQuery,  setActiveQuery]  = useState('');
   const inputRef = useRef(null);
 
-  // Sync activeGroup from URL-seeded category on mount
   useEffect(() => {
     if (category) {
       const grp = groupedCategories.find(({ categories: cats }) =>
@@ -158,8 +155,8 @@ export default function Workers() {
   const activeCatName = categories.find((c) => c.slug === category)?.name || '';
 
   const seoTitle = category
-    ? `${activeCatName || category.replace(/_/g, ' ')} Pros${district ? ` in ${district}` : ''}`
-    : `Find Skilled Pros${district ? ` in ${district}` : ''}`;
+    ? `${activeCatName || category.replace(/_/g, ' ')} متخصصین${district ? ` در ${district}` : ''}`
+    : `جستجوی متخصصین${district ? ` در ${district}` : ''}`;
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -172,11 +169,9 @@ export default function Workers() {
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <div className="relative bg-gradient-to-br from-violet-600 via-violet-500 to-pink-500 overflow-hidden">
 
-        {/* Decorative blobs */}
         <div className="absolute top-0 left-1/4 w-72 h-72 bg-white/5 rounded-full -translate-y-1/2 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-56 h-56 bg-pink-300/10 rounded-full translate-y-1/2 blur-2xl pointer-events-none" />
 
-        {/* Dot grid */}
         <div
           className="absolute inset-0 opacity-10 pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }}
@@ -184,7 +179,6 @@ export default function Workers() {
 
         <div className="relative z-10 max-w-3xl mx-auto px-4 pt-14 pb-10 text-center text-white">
 
-          {/* Eyebrow */}
           <div className="flex justify-center mb-4">
             <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20
                              text-white text-xs font-semibold px-4 py-1.5 rounded-full tracking-widest uppercase">
@@ -192,17 +186,15 @@ export default function Workers() {
             </span>
           </div>
 
-          {/* Title */}
           <h1 className="text-4xl sm:text-5xl font-black mb-3 text-white tracking-tight">
-            {t('workers.title')}
+            متخصصین
           </h1>
           <p className="text-white/80 text-base mb-6">
             {pagination.total
-              ? `${pagination.total.toLocaleString()} verified Pros in ${SERVICE_AREA}`
-              : t('workers.subtitle')}
+              ? `${pagination.total.toLocaleString()} متخصص تأییدشده در ${SERVICE_AREA}`
+              : 'لیست متخصصین'}
           </p>
 
-          {/* Trust chips */}
           <div className="flex items-center justify-center gap-3 flex-wrap mb-8">
             {[
               { Icon: Users,      label: '۲,۴۰۰+ متخصص'     },
@@ -217,7 +209,6 @@ export default function Workers() {
             ))}
           </div>
 
-          {/* Search bar */}
           <form onSubmit={commitSearch} className="max-w-xl mx-auto">
             <div className="flex items-center bg-white rounded-2xl shadow-xl shadow-violet-900/20 overflow-hidden">
               <Search className="w-5 h-5 text-stone-400 ml-4 shrink-0" />
@@ -226,7 +217,7 @@ export default function Workers() {
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder={t('workers.filters.searchPlaceholder')}
+                placeholder="جستجو..."
                 className="flex-1 px-3 py-4 text-stone-900 placeholder:text-stone-400 focus:outline-none text-sm bg-transparent"
               />
               {searchInput ? (
@@ -239,7 +230,7 @@ export default function Workers() {
                   <button type="submit"
                     className="bg-gradient-to-br from-violet-600 to-pink-500 hover:from-violet-700 hover:to-pink-600
                                text-white text-xs font-semibold px-4 py-2.5 rounded-xl whitespace-nowrap transition-all">
-                    Search
+                    جستجو
                   </button>
                 </div>
               )}
@@ -247,10 +238,10 @@ export default function Workers() {
 
             {activeQuery && (
               <p className="text-violet-200 text-xs mt-2 flex items-center justify-center gap-2">
-                Results for <strong>"{activeQuery}"</strong>
+                نتایج برای <strong>"{activeQuery}"</strong>
                 <button type="button" onClick={clearSearch}
                   className="text-white/70 hover:text-white underline">
-                  Clear
+                  پاک کردن
                 </button>
               </p>
             )}
@@ -261,7 +252,6 @@ export default function Workers() {
       {/* ── Filter bar ────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-stone-100 shadow-sm sticky top-16 z-30">
 
-        {/* ── Row 1: group chips — horizontally scrollable, never wraps ── */}
         <div
           className="border-b border-stone-50 overflow-x-auto"
           style={{
@@ -270,7 +260,6 @@ export default function Workers() {
           }}
         >
           <div className="flex items-center gap-2 px-4 py-2.5 w-max">
-            {/* همه متخصصین */}
             <button
               onClick={() => { setActiveGroup(''); setCategory(''); setPage(1); }}
               className={`flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-full
@@ -282,7 +271,6 @@ export default function Workers() {
               همه متخصصین
             </button>
 
-            {/* Group chips */}
             {Object.entries(GROUP_META).map(([slug, { Icon, label }]) => (
               <button
                 key={slug}
@@ -300,10 +288,8 @@ export default function Workers() {
           </div>
         </div>
 
-        {/* ── Row 2: district + score presets + clear — always fits one line ── */}
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-2 flex-wrap">
 
-          {/* District */}
           <div className="relative shrink-0">
             <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400 pointer-events-none" />
             <select
@@ -319,10 +305,8 @@ export default function Workers() {
             <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-stone-400 pointer-events-none" />
           </div>
 
-          {/* Divider */}
           <div className="h-4 w-px bg-stone-200 shrink-0" />
 
-          {/* Score presets */}
           <div className="flex items-center gap-1 shrink-0">
             <span className="text-xs text-stone-400 mr-1 shrink-0">امتیاز:</span>
             {SCORE_PRESETS.map(({ label, value }) => (
@@ -341,7 +325,6 @@ export default function Workers() {
 
           <div className="flex-1" />
 
-          {/* Active filter summary pills */}
           {activeGroup && (
             <span className="text-xs bg-violet-50 text-violet-700 border border-violet-100 px-2.5 py-1 rounded-full font-medium shrink-0">
               {GROUP_META[activeGroup]?.label}
@@ -349,16 +332,14 @@ export default function Workers() {
             </span>
           )}
 
-          {/* Clear all */}
           {hasFilters && (
             <button onClick={clearAll}
               className="text-xs text-stone-400 hover:text-violet-600 font-medium px-1 transition-colors shrink-0">
-              Clear all ×
+              پاک کردن همه ×
             </button>
           )}
         </div>
 
-        {/* ── Row 3: sub-category chips — only when a group is selected ── */}
         {activeGroup && subCategories.length > 0 && (
           <div
             className="border-t border-stone-50 overflow-x-auto"
@@ -396,23 +377,20 @@ export default function Workers() {
       {/* ── Results ───────────────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 py-8">
 
-        {/* Active filters summary */}
         {(activeCatName || district) && (
           <p className="text-sm text-stone-500 mb-5">
             {pagination.total !== undefined
-              ? `${pagination.total} Pro${pagination.total !== 1 ? 's' : ''}${activeCatName ? ` · ${activeCatName}` : ''}${district ? ` · ${district}` : ''}`
+              ? `${pagination.total} نتیجه${activeCatName ? ` · ${activeCatName}` : ''}${district ? ` · ${district}` : ''}`
               : null}
           </p>
         )}
 
-        {/* ── Loading skeleton ─────────────────────────────────────────────── */}
         {isLoading || isFetching || (!emptyReady && workers.length === 0) ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => <WorkerCardSkeleton key={i} />)}
           </div>
 
         ) : !workers.length ? (
-          /* ── Empty state ───────────────────────────────────────────────── */
           (() => {
             const isPureCategoryEmpty = category && !district && !minScore && !activeQuery;
 
@@ -432,17 +410,17 @@ export default function Workers() {
                 {isPureCategoryEmpty ? (
                   <>
                     <h2 className="text-2xl font-black text-stone-800 text-center leading-snug mb-2">
-                      Be the first on the scene! 🚀
+                      اولین نفر باشید! 🚀
                     </h2>
                     <p className="text-stone-500 text-sm text-center max-w-sm mb-8 leading-relaxed">
-                      The <strong className="text-stone-700">{activeCatName}</strong> category is wide open — nobody's listed yet.
-                      Jump in first, grab the spotlight, and score free leads before the competition even knows this exists.
+                      دسته <strong className="text-stone-700">{activeCatName}</strong> هنوز خالیه — هیچ‌کس ثبت‌نام نکرده.
+                      سریع‌تر از بقیه وارد شوید و از مزایای ویژه بهره‌مند شوید.
                     </p>
                     <div className="flex flex-wrap justify-center gap-3 mb-8">
                       {[
-                        { Icon: Star,   text: 'Free forever plan'      },
-                        { Icon: Users,  text: 'Direct client leads'     },
-                        { Icon: Rocket, text: 'First-mover visibility'  },
+                        { Icon: Star,   text: 'پلن رایگان دائمی'      },
+                        { Icon: Users,  text: 'دریافت سفارش مستقیم'     },
+                        { Icon: Rocket, text: 'دیده شدن در اول لیست'  },
                       ].map(({ Icon, text }) => (
                         <span key={text} className="inline-flex items-center gap-1.5 bg-violet-50 text-violet-700 text-xs font-semibold px-3.5 py-2 rounded-full border border-violet-100">
                           <Icon className="w-3.5 h-3.5" strokeWidth={2} /> {text}
@@ -457,43 +435,44 @@ export default function Workers() {
                                    font-bold px-7 py-3.5 rounded-2xl hover:from-violet-700
                                    hover:to-pink-600 transition-all shadow-lg shadow-violet-200 text-sm"
                       >
-                        Join Free — List Your Services
+                        ثبت‌نام رایگان — خدمات خود را ثبت کنید
                         <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
                       </Link>
                       <div className="flex items-center gap-3 w-full">
                         <ShareButton
-                          label="Share with a friend"
-                          title={`Know a ${activeCatName} professional? Send them this`}
-                          text={`There are no ${activeCatName} pros on SkillHub yet — they could be the first! Free to join, direct client leads.`}
+                          label="اشتراک‌گذاری با دوستان"
+                          title={`آیا متخصص ${activeCatName} می‌شناسید؟`}
+                          text={`هنوز هیچ متخصص ${activeCatName} در قشمی نو ثبت‌نام نکرده — می‌توانند اولین نفر باشند!`}
                           url={window.location.href}
                         />
                         <div className="flex-1 h-px bg-stone-200" />
                         <Link to="/services"
                           className="text-sm text-stone-400 hover:text-violet-600 font-medium transition-colors whitespace-nowrap">
-                          Browse services →
+                          مشاهده خدمات ←
                         </Link>
                       </div>
                     </div>
                     <p className="text-xs text-stone-400 mt-8 text-center">
-                      Looking to hire? Check back soon — or{' '}
+                      به دنبال استخدام هستید؟ بعداً سر بزنید — یا{' '}
                       <Link to="/professionals" className="text-violet-500 hover:underline">
-                        search all professionals
-                      </Link>{' '}across every category.
+                        جستجوی همه متخصصین
+                      </Link>{' '}
+                      در همه دسته‌ها.
                     </p>
                   </>
                 ) : (
                   <>
                     <h2 className="text-xl font-black text-stone-800 text-center mb-2">
-                      No Pros found
+                      نتیجه‌ای پیدا نشد
                     </h2>
                     <p className="text-stone-500 text-sm text-center max-w-sm mb-6">
-                      {t('workers.noResultsHint')}
+                      نتیجه‌ای پیدا نشد. فیلترها را تغییر دهید.
                     </p>
                     <button onClick={clearAll}
                       className="inline-flex items-center gap-2 bg-gradient-to-br from-violet-600 to-pink-500
                                  text-white font-semibold px-6 py-2.5 rounded-xl hover:from-violet-700
                                  hover:to-pink-600 transition-all shadow-md text-sm">
-                      Clear all filters
+                      پاک کردن همه فیلترها
                     </button>
                   </>
                 )}
@@ -502,11 +481,10 @@ export default function Workers() {
           })()
 
         ) : (
-          /* ── Pro cards ─────────────────────────────────────────────────── */
           <>
             <p className="text-sm text-stone-500 mb-4">
-              {t('workers.results', { count: pagination.total ?? workers.length })}
-              {pagination.pages > 1 && ` — page ${pagination.page} of ${pagination.pages}`}
+              {pagination.total ?? workers.length} نتیجه
+              {pagination.pages > 1 && ` — صفحه ${pagination.page} از ${pagination.pages}`}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -515,13 +493,12 @@ export default function Workers() {
               ))}
             </div>
 
-            {/* Pagination */}
             {pagination.pages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-10">
                 <button onClick={() => setPage((p) => p - 1)} disabled={!pagination.hasPrev}
                   className="text-sm font-medium px-4 py-2 rounded-xl bg-white border border-stone-200
                              hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                  ← {t('common.back')}
+                  ← قبلی
                 </button>
 
                 <div className="flex gap-1">
@@ -550,7 +527,7 @@ export default function Workers() {
                 <button onClick={() => setPage((p) => p + 1)} disabled={!pagination.hasNext}
                   className="text-sm font-medium px-4 py-2 rounded-xl bg-white border border-stone-200
                              hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                  {t('common.next')} →
+                  بعدی →
                 </button>
               </div>
             )}
@@ -558,16 +535,15 @@ export default function Workers() {
         )}
       </div>
 
-      {/* ── Footer CTA ────────────────────────────────────────────────────── */}
       {!hasFilters && workers.length > 0 && (
         <div className="bg-gradient-to-br from-violet-600 via-violet-500 to-pink-500 py-12 px-4 text-center text-white mt-8">
-          <h3 className="text-2xl font-bold mb-2 text-white">Looking for a business instead?</h3>
+          <h3 className="text-2xl font-bold mb-2 text-white">به دنبال کسب‌وکار هستید؟</h3>
           <p className="text-white/80 text-sm mb-6">
-            Browse verified salons, studios, repair shops, catering companies and more
+            سالن‌ها، استودیوها، تعمیرگاه‌ها و مراکز پذیرایی تأییدشده را مشاهده کنید.
           </p>
           <Link to="/businesses"
             className="inline-block bg-white text-violet-700 font-semibold px-8 py-3 rounded-xl hover:bg-violet-50 transition-colors">
-            Browse Businesses
+            مشاهده کسب‌وکارها
           </Link>
         </div>
       )}

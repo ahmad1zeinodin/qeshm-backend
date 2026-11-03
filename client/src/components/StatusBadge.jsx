@@ -1,5 +1,3 @@
-import { useTranslation } from 'react-i18next';
-
 const statusColors = {
   pending: 'bg-yellow-100 text-yellow-800',
   accepted: 'bg-blue-100 text-blue-800',
@@ -9,10 +7,18 @@ const statusColors = {
   disputed: 'bg-red-100 text-red-800',
 };
 
+const statusLabels = {
+  pending: 'در انتظار',
+  accepted: 'پذیرفته شده',
+  in_progress: 'در حال انجام',
+  completed: 'انجام شده',
+  cancelled: 'لغو شده',
+  disputed: 'اختلاف',
+};
+
 export default function StatusBadge({ status }) {
-  const { t } = useTranslation();
   if (!status) return null;
   const fallback = status.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-  const label = t(`status.${status}`, { defaultValue: fallback });
+  const label = statusLabels[status] || fallback;
   return <span className={`badge ${statusColors[status] || 'bg-stone-100 text-stone-700'}`}>{label}</span>;
 }

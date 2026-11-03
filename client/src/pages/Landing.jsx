@@ -1,18 +1,14 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import SEO from '../components/SEO';
 import api from '../lib/axios';
 
 const heroImages = '/assets/backg-CuHfEock.jpg';
 const heroWebp = '/assets/backg-ERrGBo2t.webp';
-const roles = ["clients", "workers", "businesses"];
 const rotatingWords = ["ویلا", "تعمیرکار", "کشتی تفریحی", "غواصی", "رستوران", "تور گشت جزیره", "صنایع دستی", "هتل", "بازار", "سوغات", "اقامتگاه", "جاذبه گردشگری"];
 
 export default function Landing() {
-  const { t } = useTranslation();
-  const [activeRole, setActiveRole] = useState("clients");
   const [hasVideo, setHasVideo] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
@@ -27,15 +23,6 @@ export default function Landing() {
     }, 3000);
     return () => clearInterval(interval);
   }, []);
-
-  const faqGroups = useMemo(() => roles.map(role => {
-    const items = t(`landing.faq.groups.${role}.items`, { returnObjects: true });
-    return {
-      key: role,
-      label: t(`landing.faq.groups.${role}.label`),
-      items: Array.isArray(items) ? items : []
-    };
-  }), [t]);
 
   const { data: featuredWorkers = [] } = useQuery({
     queryKey: ['featuredWorkers'],
