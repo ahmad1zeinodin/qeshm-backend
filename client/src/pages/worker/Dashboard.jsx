@@ -13,11 +13,11 @@ import ShopContent from './ShopContent';
 import HotelContent from './HotelContent';
 import AttractionContent from './AttractionContent';
 import WholesaleContent from './WholesaleContent';
-import api from '../../lib/axios'; // ✅ ایمپورت api
+import api from '../../lib/axios';
 
 export default function WorkerDashboard() {
   const navigate = useNavigate();
-  const { user, login } = useAuthStore(); // ✅ login برای آپدیت استیت
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('overview');
   const [isOnline, setIsOnline] = useState(user?.isOnline || false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -29,9 +29,7 @@ export default function WorkerDashboard() {
       const res = await api.put('/workers/me/online-status', { isOnline: newStatus });
       if (res.data.success) {
         setIsOnline(newStatus);
-        // ✅ آپدیت استیت کاربر برای اینکه در کل برنامه اعمال بشه
-        const token = localStorage.getItem('token');
-        login({ ...user, isOnline: newStatus }, token);
+        // ✅ خط login حذف شد (چون توکن را پاک می‌کرد)
       }
     } catch (err) {
       alert('خطا در تغییر وضعیت آنلاین: ' + (err.response?.data?.message || err.message));

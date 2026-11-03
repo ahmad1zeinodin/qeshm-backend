@@ -5,16 +5,22 @@ export const useAuthStore = create(
   persist(
     (set) => ({
       user: null,
-      accessToken: null, // ✅ تغییر نام به accessToken
+      accessToken: null,
       
       login: (userData, tokenValue) => {
-        localStorage.setItem('accessToken', tokenValue); // ✅ تغییر نام کلید در localStorage
+        if (tokenValue) {
+          localStorage.setItem('accessToken', tokenValue);
+        }
         set({ user: userData, accessToken: tokenValue });
       },
 
       setAuth: (userData, accessToken, refreshToken) => {
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
+        if (accessToken) {
+          localStorage.setItem('accessToken', accessToken);
+        }
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
+        }
         set({ user: userData, accessToken: accessToken });
       },
       
@@ -27,6 +33,7 @@ export const useAuthStore = create(
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ user: state.user, accessToken: state.accessToken }),
     }
   )
 );
